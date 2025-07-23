@@ -24,9 +24,46 @@ class SimpleCallScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   StatusText(status: 'Incoming call...'),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: controller.answerCall,
-                    child: const Text('Answer'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: controller.answerCall,
+                        child: const Text('Answer'),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: controller.rejectCall,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Text('Reject'),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            else if (controller.inCall.value)
+              Column(
+                children: [
+                  StatusText(status: 'In call'),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: controller.hangupCall,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Text('Hang Up'),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: controller.isMuted.value ? controller.unmuteCall : controller.muteCall,
+                        child: Text(controller.isMuted.value ? 'Unmute' : 'Mute'),
+                      ),
+                    ],
                   ),
                 ],
               )
@@ -36,6 +73,27 @@ class SimpleCallScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: controller.register,
               child: const Text('Register SIP'),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 180,
+                  child: TextField(
+                    onChanged: (val) => controller.outgoingTarget.value = val,
+                    decoration: const InputDecoration(
+                      labelText: 'Call extension or SIP URI',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: controller.makeOutgoingCall,
+                  child: const Text('Call'),
+                ),
+              ],
             ),
           ],
         )),

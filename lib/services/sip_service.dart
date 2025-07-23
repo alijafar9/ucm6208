@@ -92,6 +92,61 @@ class SipService extends SipUaHelperListener {
     }
   }
 
+  void reject(Call call) {
+    try {
+      print('Rejecting call...');
+      call.hangup();
+      print('Call rejected successfully');
+    } catch (e) {
+      print('Error rejecting call: $e');
+      rethrow;
+    }
+  }
+
+  void makeCall(String target, {bool voiceOnly = true}) {
+    try {
+      print('Making outgoing call to: $target');
+      _helper.call(target, voiceOnly: voiceOnly);
+      print('Outgoing call initiated');
+    } catch (e) {
+      print('Error making outgoing call: $e');
+      rethrow;
+    }
+  }
+
+  void hangup(Call call) {
+    try {
+      print('Hanging up call...');
+      call.hangup();
+      print('Call hung up successfully');
+    } catch (e) {
+      print('Error hanging up call: $e');
+      rethrow;
+    }
+  }
+
+  void mute(Call call, {bool audio = true, bool video = false}) {
+    try {
+      print('Muting call...');
+      call.mute(audio, video);
+      print('Call muted');
+    } catch (e) {
+      print('Error muting call: $e');
+      rethrow;
+    }
+  }
+
+  void unmute(Call call, {bool audio = true, bool video = false}) {
+    try {
+      print('Unmuting call...');
+      call.unmute(audio, video);
+      print('Call unmuted');
+    } catch (e) {
+      print('Error unmuting call: $e');
+      rethrow;
+    }
+  }
+
   // --- Required empty implementations ---
   @override
   void transportStateChanged(TransportState state) {

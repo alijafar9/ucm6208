@@ -7,6 +7,9 @@ class SimpleCallController extends GetxController {
 
   var callerId = ''.obs;
   var hasIncomingCall = false.obs;
+  var outgoingTarget = ''.obs;
+  var inCall = false.obs;
+  var isMuted = false.obs;
   Call? currentCall;
 
   @override
@@ -31,10 +34,52 @@ class SimpleCallController extends GetxController {
   void answerCall() {
     if (currentCall != null) {
       sipService.answer(currentCall!);
+      inCall.value = true;
       hasIncomingCall.value = false;
-      callerId.value = '';
-      currentCall = null;
     }
   }
-  //test
+
+  void rejectCall() {
+    if (currentCall != null) {
+      sipService.reject(currentCall!);
+      _resetCallState();
+    }
+  }
+
+  void makeOutgoingCall() {
+    if (outgoingTarget.value.isNotEmpty) {
+      sipService.makeCall(outgoingTarget.value);
+      inCall.value = true;
+    }
+  }
+
+  void hangupCall() {
+    if (currentCall != null) {
+      sipService.hangup(currentCall!);
+      _resetCallState();
+      inCall.value = false;
+    }
+  }
+
+  void muteCall() {
+    if (currentCall != null) {
+      sipService.mute(currentCall!);
+      isMuted.value = true;
+    }
+  }
+
+  void unmuteCall() {
+    if (currentCall != null) {
+      sipService.unmute(currentCall!);
+      isMuted.value = false;
+    }
+  }
+
+  void _resetCallState() {
+    hasIncomingCall.value = false;
+    callerId.value = '';
+    currentCall = null;
+    inCall.value = false;
+    isMuted.value = false;
+  }
 } 
