@@ -20,9 +20,14 @@ class SimpleCallController extends GetxController {
   void onInit() {
     super.onInit();
     sipService.onIncomingCall = (call, id) {
+      print('🔄 Incoming call detected in controller!');
+      print('Caller ID: $id');
+      print('Call object: $call');
       currentCall = call;
       callerId.value = id;
       hasIncomingCall.value = true;
+      print('✅ hasIncomingCall set to: ${hasIncomingCall.value}');
+      print('✅ callerId set to: ${callerId.value}');
     };
     sipService.onError = setError;
     enumerateAudioInputDevices();
@@ -47,10 +52,10 @@ class SimpleCallController extends GetxController {
 
   void register() {
     sipService.register(
-      username: 'YOUR_EXTENSION',
-      password: 'YOUR_PASSWORD',
-      domain: 'YOUR_UCM_IP',
-      wsUri: 'wss://YOUR_UCM_IP:8089/ws',
+      username: '002',
+      password: 'tr123',
+      domain: '172.16.26.2',
+      wsUri: 'ws://172.16.26.2:8088/ws',
     );
   }
 

@@ -76,10 +76,21 @@ class SipService extends SipUaHelperListener {
 
   @override
   void onNewCall(Call call) {
-    print('New call received: ${call.toString()}');
+    print('🔄 onNewCall triggered!');
+    print('Call object: ${call.toString()}');
+    print('Remote identity: ${call.remote_identity}');
+    print('Remote display name: ${call.remote_display_name}');
+    
     // Use the actual properties that exist in the Call class
     final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
-    onIncomingCall?.call(call, callerId);
+    print('📞 Caller ID extracted: $callerId');
+    
+    if (onIncomingCall != null) {
+      print('✅ Calling onIncomingCall callback...');
+      onIncomingCall!.call(call, callerId);
+    } else {
+      print('❌ onIncomingCall callback is null!');
+    }
   }
 
   void answer(Call call) {

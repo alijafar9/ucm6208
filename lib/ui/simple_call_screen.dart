@@ -31,6 +31,20 @@ class SimpleCallScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            // Debug info
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 16),
+              color: Colors.blue[50],
+              child: Column(
+                children: [
+                  Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('hasIncomingCall: ${controller.hasIncomingCall.value}'),
+                  Text('callerId: "${controller.callerId.value}"'),
+                  Text('inCall: ${controller.inCall.value}'),
+                ],
+              ),
+            ),
             if (controller.hasIncomingCall.value)
               // Incoming call card design
               Container(
