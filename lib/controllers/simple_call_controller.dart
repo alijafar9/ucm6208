@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../services/sip_service.dart';
 import 'package:sip_ua/sip_ua.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class SimpleCallController extends GetxController {
   final SipService sipService = SipService();
@@ -11,6 +12,8 @@ class SimpleCallController extends GetxController {
   var inCall = false.obs;
   var isMuted = false.obs;
   var errorMessage = ''.obs;
+  var audioInputDevices = <MediaDeviceInfo>[].obs;
+  var selectedAudioInputId = ''.obs;
   Call? currentCall;
 
   @override
@@ -22,6 +25,24 @@ class SimpleCallController extends GetxController {
       hasIncomingCall.value = true;
     };
     sipService.onError = setError;
+    enumerateAudioInputDevices();
+    register(); // Auto-register on startup
+  }
+
+  Future<void> enumerateAudioInputDevices() async {
+    try {
+      final devices = await navigator.mediaDevices.enumerateDevices();
+      audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').toList();
+      if (audioInputDevices.isNotEmpty && selectedAudioInputId.value.isEmpty) {
+        selectedAudioInputId.value = audioInputDevices.first.deviceId ?? '';
+      }
+    } catch (e) {
+      setError('Failed to enumerate audio devices: $e');
+    }
+  }
+
+  void selectAudioInput(String deviceId) {
+    selectedAudioInputId.value = deviceId;
   }
 
   void register() {
@@ -51,7 +72,7 @@ class SimpleCallController extends GetxController {
   void makeOutgoingCall() {
     if (outgoingTarget.value.isNotEmpty) {
       try {
-        sipService.makeCall(outgoingTarget.value);
+        sipService.makeCall(outgoingTarget.value, audioInputId: selectedAudioInputId.value);
         inCall.value = true;
         errorMessage.value = '';
       } catch (e) {

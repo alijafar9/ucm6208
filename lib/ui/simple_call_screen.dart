@@ -84,11 +84,18 @@ class SimpleCallScreen extends StatelessWidget {
             else
               const StatusText(status: 'No incoming call'),
             const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: controller.register,
-              child: const Text('Register SIP'),
+            DropdownButton<String>(
+              value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
+              hint: const Text('Select Microphone'),
+              items: controller.audioInputDevices.map((device) => DropdownMenuItem(
+                value: device.deviceId,
+                child: Text(device.label ?? 'Unknown Mic'),
+              )).toList(),
+              onChanged: (val) {
+                if (val != null) controller.selectAudioInput(val);
+              },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
