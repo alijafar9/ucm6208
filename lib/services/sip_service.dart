@@ -107,13 +107,7 @@ class SipService extends SipUaHelperListener {
   void makeCall(String target, {bool voiceOnly = true, String? audioInputId}) {
     try {
       print('Making outgoing call to: $target');
-      final mediaConstraints = {
-        'audio': audioInputId != null && audioInputId.isNotEmpty
-            ? {'deviceId': audioInputId}
-            : true,
-        'video': false,
-      };
-      _helper.call(target, voiceOnly: voiceOnly, mediaConstraints: mediaConstraints);
+      _helper.call(target, voiceOnly: voiceOnly);
       print('Outgoing call initiated');
     } catch (e) {
       print('Error making outgoing call: $e');

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import '../services/sip_service.dart';
 import 'package:sip_ua/sip_ua.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 
 class SimpleCallController extends GetxController {
   final SipService sipService = SipService();
@@ -12,7 +12,7 @@ class SimpleCallController extends GetxController {
   var inCall = false.obs;
   var isMuted = false.obs;
   var errorMessage = ''.obs;
-  var audioInputDevices = <MediaDeviceInfo>[].obs;
+  var audioInputDevices = <webrtc.MediaDeviceInfo>[].obs;
   var selectedAudioInputId = ''.obs;
   Call? currentCall;
 
@@ -31,7 +31,7 @@ class SimpleCallController extends GetxController {
 
   Future<void> enumerateAudioInputDevices() async {
     try {
-      final devices = await navigator.mediaDevices.enumerateDevices();
+      final devices = await webrtc.navigator.mediaDevices.enumerateDevices();
       audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').toList();
       if (audioInputDevices.isNotEmpty && selectedAudioInputId.value.isEmpty) {
         selectedAudioInputId.value = audioInputDevices.first.deviceId ?? '';
@@ -72,7 +72,7 @@ class SimpleCallController extends GetxController {
   void makeOutgoingCall() {
     if (outgoingTarget.value.isNotEmpty) {
       try {
-        sipService.makeCall(outgoingTarget.value, audioInputId: selectedAudioInputId.value);
+        sipService.makeCall(outgoingTarget.value);
         inCall.value = true;
         errorMessage.value = '';
       } catch (e) {
