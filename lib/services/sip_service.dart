@@ -1,4 +1,5 @@
 import 'package:sip_ua/sip_ua.dart';
+import 'package:sip_ua/src/constants.dart';
 
 class SipService extends SipUaHelperListener {
   final SIPUAHelper _helper = SIPUAHelper();
@@ -15,43 +16,110 @@ class SipService extends SipUaHelperListener {
     required String wsUri,
     String? displayName,
   }) {
-    UaSettings settings = UaSettings();
-    settings.webSocketUrl = wsUri;
-    settings.webSocketSettings.extraHeaders = {};
-    settings.uri = 'sip:$username@$domain';
-    settings.authorizationUser = username;
-    settings.password = password;
-    settings.displayName = displayName ?? username;
-    settings.userAgent = 'Dart SIP Client';
-    _helper.start(settings);
+    try {
+      print('Starting SIP registration...');
+      print('Username: $username');
+      print('Domain: $domain');
+      print('WebSocket URL: $wsUri');
+      
+      UaSettings settings = UaSettings();
+      
+      // WebSocket settings
+      settings.webSocketUrl = wsUri;
+      settings.webSocketSettings.extraHeaders = {};
+      settings.webSocketSettings.allowBadCertificate = true;
+      
+      // SIP URI and authentication
+      settings.uri = 'sip:$username@$domain';
+      settings.authorizationUser = username;
+      settings.password = password;
+      settings.displayName = displayName ?? username;
+      settings.userAgent = 'Dart SIP Client';
+      
+      // Transport type (WebSocket)
+      settings.transportType = TransportType.WS;
+      
+      // Registration settings
+      settings.register = true;
+      settings.register_expires = 120;
+      settings.registrarServer = 'sip:$domain';
+      
+      // DTMF mode
+      settings.dtmfMode = DtmfMode.RFC2833;
+      
+      // ICE settings
+      settings.iceServers = [
+        {'urls': 'stun:stun.l.google.com:19302'},
+      ];
+      settings.iceTransportPolicy = IceTransportPolicy.ALL;
+      
+      // Session timers
+      settings.sessionTimers = true;
+      settings.sessionTimersRefreshMethod = SipMethod.UPDATE;
+      
+      // Connection recovery
+      settings.connectionRecoveryMaxInterval = 30;
+      settings.connectionRecoveryMinInterval = 2;
+      
+      // ICE gathering timeout
+      settings.iceGatheringTimeout = 500;
+      
+      print('Starting SIP helper with settings...');
+      _helper.start(settings);
+      print('SIP helper started successfully');
+    } catch (e) {
+      print('Error during SIP registration: $e');
+      rethrow;
+    }
   }
 
   @override
   void onNewCall(Call call) {
-    final callerId = call.toString();
+    print('New call received: ${call.toString()}');
+    // Use the actual properties that exist in the Call class
+    final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
     onIncomingCall?.call(call, callerId);
   }
 
   void answer(Call call) {
-    call.answer({});
+    try {
+      print('Answering call...');
+      call.answer({});
+      print('Call answered successfully');
+    } catch (e) {
+      print('Error answering call: $e');
+      rethrow;
+    }
   }
 
   // --- Required empty implementations ---
   @override
-  void transportStateChanged(TransportState state) {}
+  void transportStateChanged(TransportState state) {
+    print('Transport state changed: $state');
+  }
 
   @override
-  void registrationStateChanged(RegistrationState state) {}
+  void registrationStateChanged(RegistrationState state) {
+    print('Registration state changed: $state');
+  }
 
   @override
-  void callStateChanged(Call call, CallState state) {}
+  void callStateChanged(Call call, CallState state) {
+    print('Call state changed: $state');
+  }
 
   @override
-  void onNewMessage(SIPMessageRequest msg) {}
+  void onNewMessage(SIPMessageRequest msg) {
+    print('New SIP message received');
+  }
 
   @override
-  void onNewNotify(Notify ntf) {}
+  void onNewNotify(Notify ntf) {
+    print('New SIP notify received');
+  }
 
   @override
-  void onNewReinvite(ReInvite event) {}
+  void onNewReinvite(ReInvite event) {
+    print('New SIP reinvite received');
+  }
 } 
