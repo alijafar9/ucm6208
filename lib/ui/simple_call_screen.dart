@@ -31,20 +31,7 @@ class SimpleCallScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            // Debug info
-            Container(
-              padding: const EdgeInsets.all(8),
-              margin: const EdgeInsets.only(bottom: 16),
-              color: Colors.blue[50],
-              child: Column(
-                children: [
-                  Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('hasIncomingCall: ${controller.hasIncomingCall.value}'),
-                  Text('callerId: "${controller.callerId.value}"'),
-                  Text('inCall: ${controller.inCall.value}'),
-                ],
-              ),
-            ),
+
             if (controller.hasIncomingCall.value)
               // Incoming call card design
               Container(
@@ -236,17 +223,107 @@ class SimpleCallScreen extends StatelessWidget {
             else
               const StatusText(status: 'No incoming call'),
             const SizedBox(height: 40),
-            DropdownButton<String>(
-              value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
-              hint: const Text('Select Microphone'),
-              items: controller.audioInputDevices.map((device) => DropdownMenuItem(
-                value: device.deviceId,
-                child: Text(device.label ?? 'Unknown Mic'),
-              )).toList(),
-              onChanged: (val) {
-                if (val != null) controller.selectAudioInput(val);
-              },
+            
+            // Microphone Test Section
+            Container(
+              width: 400,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.mic, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Microphone Test',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Status text
+                  if (controller.microphoneTestStatus.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: controller.microphoneTestStatus.value.contains('✅') 
+                            ? Colors.green[100] 
+                            : controller.microphoneTestStatus.value.contains('❌') 
+                                ? Colors.red[100] 
+                                : Colors.orange[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        controller.microphoneTestStatus.value,
+                        style: TextStyle(
+                          color: controller.microphoneTestStatus.value.contains('✅') 
+                              ? Colors.green[800] 
+                              : controller.microphoneTestStatus.value.contains('❌') 
+                                  ? Colors.red[800] 
+                                  : Colors.orange[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  
+                  // Test buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: controller.testMicrophonePermission,
+                        icon: const Icon(Icons.mic),
+                        label: const Text('Test Microphone'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: controller.listAudioDevices,
+                        icon: const Icon(Icons.devices),
+                        label: const Text('List Devices'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Device dropdown
+                  if (controller.audioInputDevices.isNotEmpty)
+                    DropdownButton<String>(
+                      value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
+                      hint: const Text('Select Microphone'),
+                      isExpanded: true,
+                      items: controller.audioInputDevices.map((device) => DropdownMenuItem(
+                        value: device.deviceId,
+                        child: Text(device.label ?? 'Unknown Mic'),
+                      )).toList(),
+                      onChanged: (val) {
+                        if (val != null) controller.selectAudioInput(val);
+                      },
+                    ),
+                ],
+              ),
             ),
+            
+            const SizedBox(height: 20),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

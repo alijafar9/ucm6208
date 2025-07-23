@@ -14,20 +14,17 @@ class SimpleCallController extends GetxController {
   var errorMessage = ''.obs;
   var audioInputDevices = <webrtc.MediaDeviceInfo>[].obs;
   var selectedAudioInputId = ''.obs;
+  var microphonePermission = false.obs;
+  var microphoneTestStatus = ''.obs;
   Call? currentCall;
 
   @override
   void onInit() {
     super.onInit();
     sipService.onIncomingCall = (call, id) {
-      print('🔄 Incoming call detected in controller!');
-      print('Caller ID: $id');
-      print('Call object: $call');
       currentCall = call;
       callerId.value = id;
       hasIncomingCall.value = true;
-      print('✅ hasIncomingCall set to: ${hasIncomingCall.value}');
-      print('✅ callerId set to: ${callerId.value}');
     };
     sipService.onError = setError;
     enumerateAudioInputDevices();
@@ -119,5 +116,33 @@ class SimpleCallController extends GetxController {
     inCall.value = false;
     isMuted.value = false;
     errorMessage.value = '';
+  }
+
+  Future<void> testMicrophonePermission() async {
+    try {
+      microphoneTestStatus.value = 'Testing microphone permission...';
+      final stream = await webrtc.navigator.mediaDevices.getUserMedia({'audio': true});
+      microphonePermission.value = true;
+      microphoneTestStatus.value = '✅ Microphone permission granted!';
+      
+      // Stop the test stream
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (e) {
+      microphonePermission.value = false;
+      microphoneTestStatus.value = '❌ Microphone permission denied: $e';
+    }
+  }
+
+  Future<void> listAudioDevices() async {
+    try {
+      await enumerateAudioInputDevices();
+      if (audioInputDevices.isEmpty) {
+        microphoneTestStatus.value = '⚠️ No audio input devices found';
+      } else {
+        microphoneTestStatus.value = '📱 Found ${audioInputDevices.length} audio device(s)';
+      }
+    } catch (e) {
+      microphoneTestStatus.value = '❌ Error listing devices: $e';
+    }
   }
 } 
