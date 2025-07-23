@@ -4,6 +4,7 @@ import 'package:sip_ua/src/constants.dart';
 class SipService extends SipUaHelperListener {
   final SIPUAHelper _helper = SIPUAHelper();
   Function(Call, String)? onIncomingCall;
+  Function(String)? onError;
 
   SipService() {
     _helper.addSipUaHelperListener(this);
@@ -110,6 +111,9 @@ class SipService extends SipUaHelperListener {
       print('Outgoing call initiated');
     } catch (e) {
       print('Error making outgoing call: $e');
+      if (onError != null) {
+        onError!(e.toString());
+      }
       rethrow;
     }
   }

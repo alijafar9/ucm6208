@@ -10,6 +10,7 @@ class SimpleCallController extends GetxController {
   var outgoingTarget = ''.obs;
   var inCall = false.obs;
   var isMuted = false.obs;
+  var errorMessage = ''.obs;
   Call? currentCall;
 
   @override
@@ -20,6 +21,7 @@ class SimpleCallController extends GetxController {
       callerId.value = id;
       hasIncomingCall.value = true;
     };
+    sipService.onError = setError;
   }
 
   void register() {
@@ -48,8 +50,13 @@ class SimpleCallController extends GetxController {
 
   void makeOutgoingCall() {
     if (outgoingTarget.value.isNotEmpty) {
-      sipService.makeCall(outgoingTarget.value);
-      inCall.value = true;
+      try {
+        sipService.makeCall(outgoingTarget.value);
+        inCall.value = true;
+        errorMessage.value = '';
+      } catch (e) {
+        setError('Unable to start call: $e');
+      }
     }
   }
 
@@ -75,11 +82,16 @@ class SimpleCallController extends GetxController {
     }
   }
 
+  void setError(String msg) {
+    errorMessage.value = msg;
+  }
+
   void _resetCallState() {
     hasIncomingCall.value = false;
     callerId.value = '';
     currentCall = null;
     inCall.value = false;
     isMuted.value = false;
+    errorMessage.value = '';
   }
 } 

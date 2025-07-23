@@ -17,6 +17,20 @@ class SimpleCallScreen extends StatelessWidget {
         child: Obx(() => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (controller.errorMessage.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                color: Colors.red[100],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text(controller.errorMessage.value, style: const TextStyle(color: Colors.red))),
+                  ],
+                ),
+              ),
             if (controller.hasIncomingCall.value)
               Column(
                 children: [
