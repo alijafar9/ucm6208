@@ -21,12 +21,26 @@ class SimpleCallController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    print('🔧 SimpleCallController initialized');
+    
     sipService.onIncomingCall = (call, id) {
+      print('📞 INCOMING CALL DETECTED!');
+      print('📞 Caller ID: $id');
+      print('📞 Call object: $call');
+      
       currentCall = call;
       callerId.value = id;
       hasIncomingCall.value = true;
+      
+      print('📞 hasIncomingCall set to: ${hasIncomingCall.value}');
+      print('📞 callerId set to: ${callerId.value}');
     };
-    sipService.onError = setError;
+    
+    sipService.onError = (error) {
+      print('❌ SIP Error: $error');
+      setError(error);
+    };
+    
     enumerateAudioInputDevices();
     register(); // Auto-register on startup
   }

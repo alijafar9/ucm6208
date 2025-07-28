@@ -76,9 +76,15 @@ class SipService extends SipUaHelperListener {
 
   @override
   void onNewCall(Call call) {
+    print('📞 SIP onNewCall triggered!');
+    print('📞 Call details: $call');
+    
     // Use the actual properties that exist in the Call class
     final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
+    print('📞 Extracted caller ID: $callerId');
+    
     onIncomingCall?.call(call, callerId);
+    print('📞 onIncomingCall callback executed');
   }
 
   void answer(Call call) {
@@ -158,7 +164,10 @@ class SipService extends SipUaHelperListener {
 
   @override
   void registrationStateChanged(RegistrationState state) {
-    print('Registration state changed: $state');
+    print('📞 Registration state changed: $state');
+    
+    // Just log the state as a string since we don't know the exact enum values
+    print('📞 Registration state: $state');
   }
 
   @override

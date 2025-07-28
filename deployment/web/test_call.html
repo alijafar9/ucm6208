@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Client Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .call-card {
+            width: 320px;
+            padding: 24px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 2px solid #28a745;
+        }
+        .phone-icon {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 40px;
+        }
+        .caller-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .caller-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .caller-number {
+            font-size: 16px;
+            color: #666;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 20px;
+        }
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-answer {
+            background: #28a745;
+            flex: 1;
+        }
+        .btn-decline {
+            background: #dc3545;
+            flex: 1;
+        }
+        .btn-answer:hover { background: #218838; }
+        .btn-decline:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📞 SIP Client Test & Debug</h1>
+        
+        <div class="test-section">
+            <h2>🔧 Connection Test</h2>
+            <div id="connectionStatus" class="status warning">
+                Checking SIP connection...
+            </div>
+            <button onclick="testConnection()">Test SIP Connection</button>
+            <button onclick="checkRegistration()">Check Registration</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🎤 Microphone Test</h2>
+            <div id="micStatus" class="status warning">
+                Testing microphone...
+            </div>
+            <button onclick="testMicrophone()">Test Microphone</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Incoming Call Interface Preview</h2>
+            <p>This shows what the incoming call interface should look like:</p>
+            
+            <div class="call-card">
+                <div class="phone-icon">📞</div>
+                <div class="caller-info">
+                    <div class="caller-name">John Doe</div>
+                    <div class="caller-number">+1 (555) 123-4567</div>
+                </div>
+                <div style="text-align: center;">
+                    <div class="badge">
+                        ✅ Registered Client
+                    </div>
+                </div>
+                <div class="button-row">
+                    <button class="btn-decline">
+                        📞 Decline
+                    </button>
+                    <button class="btn-answer">
+                        📞 Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Troubleshooting Steps</h2>
+            <ol>
+                <li><strong>Check UCM6208 Settings:</strong>
+                    <ul>
+                        <li>WebSocket enabled on port 8088</li>
+                        <li>SIP extension '002' created</li>
+                        <li>Password 'tr123' configured</li>
+                        <li>IP address '172.16.26.2' accessible</li>
+                    </ul>
+                </li>
+                <li><strong>Check Browser Console:</strong> Press F12 and look for errors</li>
+                <li><strong>Test Network:</strong> Ensure WebSocket connection works</li>
+                <li><strong>Check Firewall:</strong> Port 8088 must be open</li>
+                <li><strong>Try Different Browser:</strong> Chrome, Firefox, or Edge</li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a href="index.html" style="color: #007bff; text-decoration: none;">← Back to SIP Client</a>
+        </div>
+    </div>
+
+    <script>
+        async function testConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🔍 Testing SIP connection to 172.16.26.2:8088...';
+            
+            try {
+                // Test WebSocket connection
+                const ws = new WebSocket('ws://172.16.26.2:8088/ws');
+                
+                ws.onopen = function() {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ WebSocket connection successful!';
+                };
+                
+                ws.onerror = function() {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ WebSocket connection failed. Check UCM6208 settings.';
+                };
+                
+                setTimeout(() => {
+                    if (ws.readyState !== WebSocket.OPEN) {
+                        statusDiv.className = 'status error';
+                        statusDiv.innerHTML = '❌ Connection timeout. Check network and UCM6208 settings.';
+                    }
+                }, 5000);
+                
+            } catch (e) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Connection error: ' + e.message;
+            }
+        }
+
+        async function checkRegistration() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🔍 Checking SIP registration status...';
+            
+            // This would normally check the actual SIP registration
+            // For now, we'll simulate the check
+            setTimeout(() => {
+                statusDiv.className = 'status warning';
+                statusDiv.innerHTML = '⚠️ Registration status unknown. Check the main app for details.';
+            }, 2000);
+        }
+
+        async function testMicrophone() {
+            const statusDiv = document.getElementById('micStatus');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🔍 Testing microphone access...';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Microphone access granted!';
+                
+                // Stop the test stream
+                stream.getTracks().forEach(track => track.stop());
+            } catch (e) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Microphone access denied: ' + e.message;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            testMicrophone();
+            testConnection();
+        };
+    </script>
+</body>
+</html> 

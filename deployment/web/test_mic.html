@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microphone Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .device-list {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Microphone Permission Test</h1>
+        <p>This page helps you test microphone permissions for the SIP client.</p>
+        
+        <div id="status" class="status warning">
+            Checking microphone permissions...
+        </div>
+        
+        <button onclick="testMicrophone()" id="testBtn">Test Microphone</button>
+        <button onclick="listDevices()" id="listBtn">List Audio Devices</button>
+        
+        <div id="deviceList" class="device-list" style="display: none;">
+            <h3>Available Audio Input Devices:</h3>
+            <ul id="devices"></ul>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📋 Troubleshooting Steps:</h3>
+            <ol>
+                <li><strong>Allow Permission:</strong> When prompted, click "Allow" for microphone access</li>
+                <li><strong>Check Browser Settings:</strong> Click the lock/shield icon in the address bar</li>
+                <li><strong>Use HTTPS:</strong> For production, HTTPS is required for microphone access</li>
+                <li><strong>Try Different Browser:</strong> Chrome, Firefox, Safari, or Edge</li>
+                <li><strong>Check System Settings:</strong> Ensure microphone is enabled in your OS</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="index.html" style="color: #007bff; text-decoration: none;">← Back to SIP Client</a>
+        </div>
+    </div>
+
+    <script>
+        let hasPermission = false;
+        
+        async function checkPermissions() {
+            const statusDiv = document.getElementById('status');
+            const testBtn = document.getElementById('testBtn');
+            
+            try {
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ Microphone access not supported in this browser';
+                    testBtn.disabled = true;
+                    return;
+                }
+                
+                // Try to get microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                hasPermission = true;
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Microphone permission granted! You can now use the SIP client.';
+                testBtn.innerHTML = 'Test Microphone (Working)';
+                
+                // Stop the test stream
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                hasPermission = false;
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Microphone permission denied: ${error.message}`;
+                testBtn.innerHTML = 'Test Microphone (Failed)';
+            }
+        }
+        
+        async function testMicrophone() {
+            const statusDiv = document.getElementById('status');
+            
+            if (!hasPermission) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Please grant microphone permission first';
+                return;
+            }
+            
+            try {
+                statusDiv.className = 'status warning';
+                statusDiv.innerHTML = '🎤 Testing microphone... (speak into your microphone)';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Create audio context to test microphone
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                const analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                
+                // Check for audio input
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(dataArray);
+                
+                let hasAudio = false;
+                for (let i = 0; i < dataArray.length; i++) {
+                    if (dataArray[i] > 0) {
+                        hasAudio = true;
+                        break;
+                    }
+                }
+                
+                if (hasAudio) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Microphone is working! Audio detected.';
+                } else {
+                    statusDiv.className = 'status warning';
+                    statusDiv.innerHTML = '⚠️ Microphone connected but no audio detected. Try speaking louder.';
+                }
+                
+                // Stop the stream
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Microphone test failed: ${error.message}`;
+            }
+        }
+        
+        async function listDevices() {
+            const deviceList = document.getElementById('deviceList');
+            const devicesList = document.getElementById('devices');
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                
+                if (audioInputs.length === 0) {
+                    devicesList.innerHTML = '<li>No audio input devices found</li>';
+                } else {
+                    devicesList.innerHTML = audioInputs.map(device => 
+                        `<li><strong>${device.label || 'Unknown Device'}</strong> (ID: ${device.deviceId})</li>`
+                    ).join('');
+                }
+                
+                deviceList.style.display = 'block';
+                
+            } catch (error) {
+                devicesList.innerHTML = `<li>Error listing devices: ${error.message}</li>`;
+                deviceList.style.display = 'block';
+            }
+        }
+        
+        // Check permissions when page loads
+        window.addEventListener('load', checkPermissions);
+    </script>
+</body>
+</html> 
