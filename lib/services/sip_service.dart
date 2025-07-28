@@ -87,6 +87,54 @@ class SipService extends SipUaHelperListener {
     }
   }
 
+  // Method to handle codec conflicts by trying different approaches
+  void answerWithCodecFallback(Call call) {
+    print('📞 Attempting to answer call with codec fallback...');
+    
+    // Try different answer strategies
+    final strategies = [
+      {
+        'name': 'Standard answer',
+        'options': <String, dynamic>{
+          'mediaConstraints': {'audio': true, 'video': false},
+          'pcConfig': {
+            'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+            'iceTransportPolicy': 'all',
+            'bundlePolicy': 'max-bundle',
+            'rtcpMuxPolicy': 'require',
+          },
+        },
+      },
+      {
+        'name': 'Minimal answer',
+        'options': <String, dynamic>{
+          'mediaConstraints': {'audio': true, 'video': false},
+        },
+      },
+      {
+        'name': 'Basic answer',
+        'options': <String, dynamic>{},
+      },
+    ];
+    
+    for (int i = 0; i < strategies.length; i++) {
+      final strategy = strategies[i];
+      try {
+        print('📞 Trying strategy ${i + 1}: ${strategy['name']}');
+        call.answer(strategy['options'] as Map<String, dynamic>);
+        print('📞 Success with strategy: ${strategy['name']}');
+        return;
+      } catch (e) {
+        print('❌ Strategy ${i + 1} failed: $e');
+        if (i == strategies.length - 1) {
+          // All strategies failed
+          print('❌ All answer strategies failed');
+          rethrow;
+        }
+      }
+    }
+  }
+
   @override
   void onNewCall(Call call) {
     print('📞 SIP onNewCall triggered!');
@@ -118,37 +166,30 @@ class SipService extends SipUaHelperListener {
           'bundlePolicy': 'max-bundle',
           'rtcpMuxPolicy': 'require',
         },
-        // Add SDP manipulation to handle codec conflicts
-        'sdpTransform': (String sdp) {
-          print('📞 Original SDP: $sdp');
-          
-          // Remove problematic G726-32 codec lines
-          final lines = sdp.split('\n');
-          final filteredLines = lines.where((line) {
-            // Remove G726-32 codec lines
-            if (line.contains('G726-32')) {
-              print('📞 Removing G726-32 line: $line');
-              return false;
-            }
-            // Remove duplicate payload type 2
-            if (line.contains('a=rtpmap:2') && line.contains('G726-32')) {
-              print('📞 Removing duplicate payload type 2: $line');
-              return false;
-            }
-            return true;
-          }).toList();
-          
-          final modifiedSdp = filteredLines.join('\n');
-          print('📞 Modified SDP: $modifiedSdp');
-          return modifiedSdp;
-        },
       };
       
+      // Try to answer with basic options first
       call.answer(answerOptions);
       print('Call answered successfully');
     } catch (e) {
       print('Error answering call: $e');
-      rethrow;
+      
+      // If the first attempt fails, try with a different approach
+      if (e.toString().contains('G726-32') || e.toString().contains('payload type')) {
+        print('📞 Codec conflict detected, trying alternative approach...');
+        try {
+          // Try answering with minimal options
+          call.answer({
+            'mediaConstraints': {'audio': true, 'video': false},
+          });
+          print('📞 Call answered with minimal options');
+        } catch (e2) {
+          print('❌ Alternative approach also failed: $e2');
+          rethrow;
+        }
+      } else {
+        rethrow;
+      }
     }
   }
 

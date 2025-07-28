@@ -75,7 +75,7 @@ class SimpleCallController extends GetxController {
     if (currentCall != null) {
       try {
         print('📞 Attempting to answer call...');
-        sipService.answer(currentCall!);
+        sipService.answerWithCodecFallback(currentCall!);
         inCall.value = true;
         hasIncomingCall.value = false;
         print('📞 Call answered successfully');
