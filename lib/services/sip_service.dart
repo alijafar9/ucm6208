@@ -172,7 +172,34 @@ class SipService extends SipUaHelperListener {
 
   @override
   void callStateChanged(Call call, CallState state) {
-    print('Call state changed: $state');
+    print('📞 Call state changed: $state');
+    print('📞 Call state type: ${state.runtimeType}');
+    print('📞 Call state string: "${state.toString()}"');
+    print('📞 Call object: $call');
+    
+    // Log all possible state information
+    try {
+      print('📞 Call state hashCode: ${state.hashCode}');
+      print('📞 Call state toString length: ${state.toString().length}');
+    } catch (e) {
+      print('📞 Error getting state details: $e');
+    }
+    
+    // Check if this is a new incoming call - try multiple approaches
+    final stateStr = state.toString().toLowerCase();
+    if (stateStr.contains('incoming') || 
+        stateStr.contains('invite') || 
+        stateStr.contains('new') ||
+        stateStr.contains('ringing') ||
+        stateStr.contains('progress')) {
+      print('📞 INCOMING CALL DETECTED in callStateChanged!');
+      final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
+      print('📞 Caller ID from callStateChanged: $callerId');
+      
+      // Trigger the incoming call callback
+      onIncomingCall?.call(call, callerId);
+      print('📞 onIncomingCall callback executed from callStateChanged');
+    }
   }
 
   @override

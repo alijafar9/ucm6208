@@ -118,6 +118,7 @@
             </div>
             <button onclick="testConnection()">Test SIP Connection</button>
             <button onclick="checkRegistration()">Check Registration</button>
+            <button onclick="testIncomingCall()" style="background-color: #28a745;">Test Incoming Call Interface</button>
         </div>
 
         <div class="test-section">
@@ -246,6 +247,28 @@
             testMicrophone();
             testConnection();
         };
+
+        function testIncomingCall() {
+            // This simulates what should happen when an incoming call is received
+            console.log('🧪 Testing incoming call interface...');
+            
+            // Try to communicate with the Flutter app
+            if (window.flutter_inappwebview) {
+                console.log('📱 Flutter WebView detected');
+                window.flutter_inappwebview.callHandler('testIncomingCall', 'John Doe', '+1 (555) 123-4567');
+            } else {
+                console.log('🌐 Running in regular browser');
+                // Try to trigger the interface through localStorage or other means
+                localStorage.setItem('testIncomingCall', JSON.stringify({
+                    callerId: 'John Doe',
+                    callerNumber: '+1 (555) 123-4567',
+                    timestamp: Date.now()
+                }));
+                
+                // Show a message to the user
+                alert('Incoming call interface test triggered. Check the main app for the call card.');
+            }
+        }
     </script>
 </body>
 </html> 
