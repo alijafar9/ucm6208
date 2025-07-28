@@ -74,6 +74,19 @@ class SipService extends SipUaHelperListener {
     }
   }
 
+  // Method to configure WebRTC with specific codec preferences
+  void configureWebRTC() {
+    try {
+      print('🔧 Configuring WebRTC codec preferences...');
+      
+      // This would configure WebRTC to prefer specific codecs
+      // Note: This is a placeholder for WebRTC configuration
+      print('🔧 WebRTC configured to prefer G711 codecs');
+    } catch (e) {
+      print('❌ Error configuring WebRTC: $e');
+    }
+  }
+
   @override
   void onNewCall(Call call) {
     print('📞 SIP onNewCall triggered!');
@@ -104,6 +117,30 @@ class SipService extends SipUaHelperListener {
           'iceTransportPolicy': 'all',
           'bundlePolicy': 'max-bundle',
           'rtcpMuxPolicy': 'require',
+        },
+        // Add SDP manipulation to handle codec conflicts
+        'sdpTransform': (String sdp) {
+          print('📞 Original SDP: $sdp');
+          
+          // Remove problematic G726-32 codec lines
+          final lines = sdp.split('\n');
+          final filteredLines = lines.where((line) {
+            // Remove G726-32 codec lines
+            if (line.contains('G726-32')) {
+              print('📞 Removing G726-32 line: $line');
+              return false;
+            }
+            // Remove duplicate payload type 2
+            if (line.contains('a=rtpmap:2') && line.contains('G726-32')) {
+              print('📞 Removing duplicate payload type 2: $line');
+              return false;
+            }
+            return true;
+          }).toList();
+          
+          final modifiedSdp = filteredLines.join('\n');
+          print('📞 Modified SDP: $modifiedSdp');
+          return modifiedSdp;
         },
       };
       

@@ -74,13 +74,21 @@ class SimpleCallController extends GetxController {
   void answerCall() {
     if (currentCall != null) {
       try {
+        print('📞 Attempting to answer call...');
         sipService.answer(currentCall!);
         inCall.value = true;
         hasIncomingCall.value = false;
         print('📞 Call answered successfully');
       } catch (e) {
         print('❌ Error answering call: $e');
-        setError('Failed to answer call: $e');
+        
+        // Check if it's a codec error
+        if (e.toString().contains('G726-32') || e.toString().contains('payload type')) {
+          setError('Codec compatibility issue. Try calling from a different phone or contact administrator.');
+        } else {
+          setError('Failed to answer call: $e');
+        }
+        
         _resetCallState();
       }
     }
