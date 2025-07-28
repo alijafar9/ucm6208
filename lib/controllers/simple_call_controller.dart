@@ -73,16 +73,30 @@ class SimpleCallController extends GetxController {
 
   void answerCall() {
     if (currentCall != null) {
-      sipService.answer(currentCall!);
-      inCall.value = true;
-      hasIncomingCall.value = false;
+      try {
+        sipService.answer(currentCall!);
+        inCall.value = true;
+        hasIncomingCall.value = false;
+        print('📞 Call answered successfully');
+      } catch (e) {
+        print('❌ Error answering call: $e');
+        setError('Failed to answer call: $e');
+        _resetCallState();
+      }
     }
   }
 
   void rejectCall() {
     if (currentCall != null) {
-      sipService.reject(currentCall!);
-      _resetCallState();
+      try {
+        sipService.reject(currentCall!);
+        print('📞 Call rejected successfully');
+      } catch (e) {
+        print('❌ Error rejecting call: $e');
+        setError('Failed to reject call: $e');
+      } finally {
+        _resetCallState();
+      }
     }
   }
 

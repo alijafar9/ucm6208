@@ -90,7 +90,24 @@ class SipService extends SipUaHelperListener {
   void answer(Call call) {
     try {
       print('Answering call...');
-      call.answer({});
+      
+      // Configure answer options to handle codec issues
+      final answerOptions = {
+        'mediaConstraints': {
+          'audio': true,
+          'video': false,
+        },
+        'pcConfig': {
+          'iceServers': [
+            {'urls': 'stun:stun.l.google.com:19302'},
+          ],
+          'iceTransportPolicy': 'all',
+          'bundlePolicy': 'max-bundle',
+          'rtcpMuxPolicy': 'require',
+        },
+      };
+      
+      call.answer(answerOptions);
       print('Call answered successfully');
     } catch (e) {
       print('Error answering call: $e');
