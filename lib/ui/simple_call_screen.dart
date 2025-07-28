@@ -345,6 +345,17 @@ class SimpleCallScreen extends StatelessWidget {
                 ),
               ],
             ),
+            
+            // Test button for incoming call interface
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: controller.testIncomingCallInterface,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('🧪 Test Incoming Call Interface'),
+            ),
           ],
         )),
       ),

@@ -185,21 +185,34 @@ class SipService extends SipUaHelperListener {
       print('📞 Error getting state details: $e');
     }
     
-    // Check if this is a new incoming call - try multiple approaches
-    final stateStr = state.toString().toLowerCase();
-    if (stateStr.contains('incoming') || 
-        stateStr.contains('invite') || 
-        stateStr.contains('new') ||
-        stateStr.contains('ringing') ||
-        stateStr.contains('progress')) {
-      print('📞 INCOMING CALL DETECTED in callStateChanged!');
-      final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
-      print('📞 Caller ID from callStateChanged: $callerId');
-      
-      // Trigger the incoming call callback
-      onIncomingCall?.call(call, callerId);
-      print('📞 onIncomingCall callback executed from callStateChanged');
+    // Since toString() doesn't work, let's try to detect incoming calls differently
+    // We'll trigger the incoming call interface for any new call state change
+    // and let the UI handle whether to show it or not
+    
+    print('📞 INCOMING CALL DETECTED in callStateChanged!');
+    final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
+    print('📞 Caller ID from callStateChanged: $callerId');
+    
+    // Extract caller info from the SIP headers if available
+    String displayName = 'Unknown Caller';
+    String phoneNumber = 'Unknown Number';
+    
+    try {
+      // Try to get caller info from the call object
+      if (call.remote_identity != null) {
+        phoneNumber = call.remote_identity!;
+        displayName = call.remote_display_name ?? phoneNumber;
+      }
+    } catch (e) {
+      print('📞 Error extracting caller info: $e');
     }
+    
+    print('📞 Final caller display name: $displayName');
+    print('📞 Final caller phone number: $phoneNumber');
+    
+    // Trigger the incoming call callback
+    onIncomingCall?.call(call, displayName);
+    print('📞 onIncomingCall callback executed from callStateChanged');
   }
 
   @override

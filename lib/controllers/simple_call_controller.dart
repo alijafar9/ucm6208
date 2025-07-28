@@ -132,6 +132,15 @@ class SimpleCallController extends GetxController {
     errorMessage.value = '';
   }
 
+  // Method to manually test the incoming call interface
+  void testIncomingCallInterface() {
+    print('🧪 Testing incoming call interface manually');
+    callerId.value = 'Test Caller (900)';
+    hasIncomingCall.value = true;
+    print('🧪 hasIncomingCall set to: ${hasIncomingCall.value}');
+    print('🧪 callerId set to: ${callerId.value}');
+  }
+
   Future<void> testMicrophonePermission() async {
     try {
       microphoneTestStatus.value = 'Testing microphone permission...';
