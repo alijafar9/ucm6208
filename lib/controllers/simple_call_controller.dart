@@ -34,6 +34,7 @@ class SimpleCallController extends GetxController {
       
       print('📞 hasIncomingCall set to: ${hasIncomingCall.value}');
       print('📞 callerId set to: ${callerId.value}');
+      print('📞 UI should now show incoming call interface');
     };
     
     sipService.onError = (error) {

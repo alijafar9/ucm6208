@@ -130,7 +130,7 @@ class SimpleCallScreen extends StatelessWidget {
                         Expanded(
                           child: Container(
                             height: 56,
-                            margin: const EdgeInsets.only(right: 8),
+                            margin: const EdgeInsets.only(right: 4),
                             child: ElevatedButton(
                               onPressed: controller.rejectCall,
                               style: ElevatedButton.styleFrom(
@@ -163,7 +163,7 @@ class SimpleCallScreen extends StatelessWidget {
                         Expanded(
                           child: Container(
                             height: 56,
-                            margin: const EdgeInsets.only(left: 8),
+                            margin: const EdgeInsets.only(left: 4),
                             child: ElevatedButton(
                               onPressed: controller.answerCall,
                               style: ElevatedButton.styleFrom(
