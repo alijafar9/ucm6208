@@ -284,25 +284,34 @@ class SimpleCallScreen extends StatelessWidget {
                         ),
                       ),
                     
-                    // Test buttons
+                    // Microphone test buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton.icon(
                           onPressed: controller.testMicrophonePermission,
-                          icon: const Icon(Icons.mic),
+                          icon: const Icon(Icons.mic, size: 16),
                           label: const Text('Test Microphone'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.blue[600],
                             foregroundColor: Colors.white,
                           ),
                         ),
                         ElevatedButton.icon(
                           onPressed: controller.listAudioDevices,
-                          icon: const Icon(Icons.devices),
+                          icon: const Icon(Icons.computer, size: 16),
                           label: const Text('List Devices'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: Colors.green[600],
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: controller.testAudioOutput,
+                          icon: const Icon(Icons.volume_up, size: 16),
+                          label: const Text('Test Audio'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange[600],
                             foregroundColor: Colors.white,
                           ),
                         ),

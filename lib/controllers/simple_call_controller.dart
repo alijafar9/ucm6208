@@ -227,6 +227,39 @@ class SimpleCallController extends GetxController {
     print('🧪 callerId set to: ${callerId.value}');
   }
 
+  // Method to test audio output (speakers/headphones)
+  Future<void> testAudioOutput() async {
+    try {
+      print('🔊 Testing audio output...');
+      microphoneTestStatus.value = 'Testing audio output...';
+      
+      // Simple audio test using HTML audio element
+      final audioElement = html.AudioElement()
+        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+        ..volume = 0.5;
+      
+      print('🔊 Playing test audio - you should hear a beep');
+      microphoneTestStatus.value = '🔊 Playing test audio... (you should hear a beep)';
+      
+      // Play the audio
+      await audioElement.play();
+      
+      // Wait for audio to finish
+      await Future.delayed(Duration(seconds: 3));
+      
+      print('🔊 Test audio completed');
+      microphoneTestStatus.value = '✅ Audio output test completed';
+      
+      // Ask user if they heard the tone
+      setError('🔊 Did you hear the test audio?\n\nIf YES: Audio output is working, issue is with WebRTC\nIf NO: Check your speakers/headphones and system audio');
+      
+    } catch (e) {
+      print('❌ Error testing audio output: $e');
+      microphoneTestStatus.value = '❌ Audio output test failed';
+      setError('Failed to test audio output: $e\n\nPlease check your system audio settings and try again.');
+    }
+  }
+
   // Method to show browser-specific microphone permission guidance
   void showMicrophoneHelp() {
     final userAgent = html.window.navigator.userAgent.toLowerCase();

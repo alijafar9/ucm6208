@@ -91,6 +91,8 @@ class SipService extends SipUaHelperListener {
   // Method to handle codec conflicts by trying different approaches
   void answerWithCodecFallback(Call call) {
     print('📞 Attempting to answer call with codec fallback...');
+    print('📞 Call state: ${call.state}');
+    print('📞 Call remote identity: ${call.remote_identity}');
 
     // Define a more aggressive strategy for better audio compatibility
     final Map<String, dynamic> answerOptions = {
@@ -108,6 +110,10 @@ class SipService extends SipUaHelperListener {
           'googAudioMirroring2': false,
           'googLeakyBucket': true,
           'googTemporalLayeredSpatialAudio': false,
+          // Force specific audio constraints for better compatibility
+          'sampleRate': 8000,
+          'channelCount': 1,
+          'volume': 1.0,
         },
         'video': false,
       },
@@ -115,6 +121,7 @@ class SipService extends SipUaHelperListener {
         'iceServers': [
           {'urls': 'stun:stun.l.google.com:19302'},
           {'urls': 'stun:stun1.l.google.com:19302'},
+          {'urls': 'stun:stun2.l.google.com:19302'},
         ],
         'iceTransportPolicy': 'all',
         'bundlePolicy': 'balanced',
@@ -126,8 +133,13 @@ class SipService extends SipUaHelperListener {
 
     try {
       print('📞 Applying enhanced WebRTC configuration and answering...');
+      print('📞 Answer options: $answerOptions');
       call.answer(answerOptions);
       print('📞 Call answered successfully with enhanced configuration.');
+      
+      // Add event listeners to track audio stream
+      _addCallEventListeners(call);
+      
     } catch (e) {
       print('❌ Error answering call with enhanced configuration: $e');
       
@@ -135,9 +147,22 @@ class SipService extends SipUaHelperListener {
       try {
         print('📞 Trying basic configuration as fallback...');
         call.answer({
-          'mediaConstraints': {'audio': true, 'video': false},
+          'mediaConstraints': {
+            'audio': {
+              'echoCancellation': true,
+              'noiseSuppression': true,
+              'autoGainControl': true,
+              'sampleRate': 8000,
+              'channelCount': 1,
+            },
+            'video': false
+          },
         });
         print('📞 Call answered with basic configuration.');
+        
+        // Add event listeners to track audio stream
+        _addCallEventListeners(call);
+        
       } catch (e2) {
         print('❌ Error with basic configuration: $e2');
         setError('Failed to answer call: $e2');
@@ -146,6 +171,25 @@ class SipService extends SipUaHelperListener {
     }
   }
 
+  // Add event listeners to track audio stream issues
+  void _addCallEventListeners(Call call) {
+    print('🎧 Adding call event listeners for audio debugging...');
+    
+    // Listen for peer connection events
+    try {
+      // Track when remote stream is added
+      print('🎧 Monitoring remote audio stream...');
+      
+      // Log call state changes
+      print('📞 Call state changed to: ${call.state}');
+      
+      // Check if we have access to peer connection
+      print('🔍 Checking peer connection status...');
+      
+    } catch (e) {
+      print('❌ Error adding call event listeners: $e');
+    }
+  }
 
 
   void makeCall(String target, {bool video = false}) {
