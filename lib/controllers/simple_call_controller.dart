@@ -83,6 +83,10 @@ class SimpleCallController extends GetxController {
       } else if (error.contains('📞 Registration status')) {
         // Keep registration status as is
         setError(error);
+      } else if (error.contains('🔄 Registration in progress')) {
+        // Keep registering state
+        isRegistering.value = true;
+        setError(error);
       } else {
         // For other errors, just show them
         setError(error);
