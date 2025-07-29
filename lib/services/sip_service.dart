@@ -158,21 +158,26 @@ class SipService extends SipUaHelperListener {
       // Try with different WebRTC configurations
       final configurations = [
         {
-          'name': 'Unified Plan',
+          'name': 'Custom G726 Filter',
           'options': <String, dynamic>{
             'mediaConstraints': {'audio': true, 'video': false},
-            'sdpSemantics': 'unified-plan',
-            'bundlePolicy': 'max-bundle',
-            'rtcpMuxPolicy': 'require',
+            'pcConfig': {
+              'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+              'iceTransportPolicy': 'all',
+              'bundlePolicy': 'max-bundle',
+              'rtcpMuxPolicy': 'require',
+              'sdpSemantics': 'unified-plan',
+            },
           },
         },
         {
-          'name': 'Plan B',
+          'name': 'Plan B Legacy',
           'options': <String, dynamic>{
             'mediaConstraints': {'audio': true, 'video': false},
-            'sdpSemantics': 'plan-b',
-            'bundlePolicy': 'max-bundle',
-            'rtcpMuxPolicy': 'require',
+            'pcConfig': {
+              'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+              'sdpSemantics': 'plan-b',
+            },
           },
         },
         {
@@ -187,7 +192,15 @@ class SipService extends SipUaHelperListener {
         final config = configurations[i];
         try {
           print('🔧 Trying G726 fix ${i + 1}: ${config['name']}');
-          call.answer(config['options'] as Map<String, dynamic>);
+          
+          // For the first strategy, try a more aggressive approach
+          if (i == 0) {
+            print('🔧 Using custom G726 filter approach...');
+            _answerWithCustomG726Handling(call, config['options'] as Map<String, dynamic>);
+          } else {
+            call.answer(config['options'] as Map<String, dynamic>);
+          }
+          
           print('🔧 Success with G726 fix: ${config['name']}');
           return;
         } catch (e) {
@@ -200,6 +213,99 @@ class SipService extends SipUaHelperListener {
     } catch (e) {
       print('❌ All G726 fixes failed: $e');
       rethrow;
+    }
+  }
+
+  // Method to try alternative WebRTC configurations
+  void _tryAlternativeWebRTCConfigs(Call call) {
+    print('🔧 Trying alternative WebRTC configurations...');
+    
+    final alternativeConfigs = [
+      {
+        'name': 'Chrome Compatible',
+        'options': <String, dynamic>{
+          'mediaConstraints': {'audio': true, 'video': false},
+          'pcConfig': {
+            'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+            'iceTransportPolicy': 'all',
+            'bundlePolicy': 'max-bundle',
+            'rtcpMuxPolicy': 'require',
+            'sdpSemantics': 'unified-plan',
+          },
+        },
+      },
+      {
+        'name': 'Firefox Compatible',
+        'options': <String, dynamic>{
+          'mediaConstraints': {'audio': true, 'video': false},
+          'pcConfig': {
+            'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+            'sdpSemantics': 'plan-b',
+          },
+        },
+      },
+      {
+        'name': 'Safari Compatible',
+        'options': <String, dynamic>{
+          'mediaConstraints': {'audio': true, 'video': false},
+          'pcConfig': {
+            'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+            'bundlePolicy': 'balanced',
+            'rtcpMuxPolicy': 'require',
+          },
+        },
+      },
+    ];
+    
+    for (int i = 0; i < alternativeConfigs.length; i++) {
+      final config = alternativeConfigs[i];
+      try {
+        print('🔧 Trying alternative config ${i + 1}: ${config['name']}');
+        call.answer(config['options'] as Map<String, dynamic>);
+        print('🔧 Success with alternative config: ${config['name']}');
+        return;
+      } catch (e) {
+        print('❌ Alternative config ${i + 1} failed: $e');
+        if (i == alternativeConfigs.length - 1) {
+          rethrow;
+        }
+      }
+    }
+  }
+
+  // Custom method to handle G726-32 with specific WebRTC configuration
+  void _answerWithCustomG726Handling(Call call, Map<String, dynamic> options) {
+    print('🔧 Custom G726 handling with WebRTC configuration...');
+    
+    try {
+      // First try the custom G726 approach
+      final modifiedOptions = Map<String, dynamic>.from(options);
+      
+      // Add specific configurations for G726 handling
+      modifiedOptions['pcConfig'] = {
+        'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+        'iceTransportPolicy': 'all',
+        'bundlePolicy': 'max-bundle',
+        'rtcpMuxPolicy': 'require',
+        'sdpSemantics': 'unified-plan',
+      };
+      
+      // Add specific media constraints
+      modifiedOptions['mediaConstraints'] = {
+        'audio': {
+          'echoCancellation': true,
+          'noiseSuppression': true,
+          'autoGainControl': true,
+        },
+        'video': false,
+      };
+      
+      // Try to answer with the modified configuration
+      call.answer(modifiedOptions);
+    } catch (e) {
+      print('❌ Custom G726 handling failed: $e');
+      print('🔧 Falling back to alternative WebRTC configs...');
+      _tryAlternativeWebRTCConfigs(call);
     }
   }
 
