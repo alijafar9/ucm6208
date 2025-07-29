@@ -92,7 +92,7 @@ class SipService extends SipUaHelperListener {
   void answerWithCodecFallback(Call call) {
     print('📞 Attempting to answer call with codec fallback...');
 
-    // Define a single, robust strategy with SDP manipulation
+    // Define a more aggressive strategy for better audio compatibility
     final Map<String, dynamic> answerOptions = {
       'mediaConstraints': {
         'audio': {
@@ -105,127 +105,48 @@ class SipService extends SipUaHelperListener {
           'googHighpassFilter': true,
           'googTypingNoiseDetection': true,
           'googAudioMirroring': false,
+          'googAudioMirroring2': false,
+          'googLeakyBucket': true,
+          'googTemporalLayeredSpatialAudio': false,
         },
         'video': false,
       },
       'pcConfig': {
-        'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+        'iceServers': [
+          {'urls': 'stun:stun.l.google.com:19302'},
+          {'urls': 'stun:stun1.l.google.com:19302'},
+        ],
         'iceTransportPolicy': 'all',
         'bundlePolicy': 'balanced',
         'rtcpMuxPolicy': 'require',
         'sdpSemantics': 'unified-plan',
+        'iceCandidatePoolSize': 10,
       },
     };
 
     try {
-      print('📞 Applying SDP manipulation and answering...');
-      _answerWithSdpManipulation(call, answerOptions);
-      print('📞 Call answered successfully with SDP manipulation.');
+      print('📞 Applying enhanced WebRTC configuration and answering...');
+      call.answer(answerOptions);
+      print('📞 Call answered successfully with enhanced configuration.');
     } catch (e) {
-      print('❌ Error answering call with SDP manipulation: $e');
-      setError('Failed to answer call due to WebRTC configuration: $e');
-      rethrow;
-    }
-  }
-
-  // Custom method to handle SDP manipulation for codec prioritization
-  RTCSessionDescription _filterSdpCodecs(RTCSessionDescription sdp) {
-    print('🔧 Intercepting local SDP for codec filtering...');
-    print('Original SDP: \n${sdp.sdp}');
-
-    String modifiedSdp = sdp.sdp!;
-
-    // Define preferred codecs and their payload types
-    // Prioritize PCMU (0) and PCMA (8), keep telephone-event (101)
-    final Map<String, int> preferredCodecs = {
-      'PCMU': 0,
-      'PCMA': 8,
-      'telephone-event': 101,
-    };
-
-    List<String> sdpLines = modifiedSdp.split('\r\n');
-    List<String> newSdpLines = [];
-    List<String> audioPayloads = [];
-    
-    // Keep track of codecs we want to include
-    Set<int> desiredPayloadTypes = preferredCodecs.values.toSet();
-    
-    // First pass: Process m=audio line
-    bool audioLineProcessed = false;
-    for (String line in sdpLines) {
-      if (line.startsWith('m=audio') && !audioLineProcessed) {
-        List<String> parts = line.split(' ');
-        List<String> currentPayloads = parts.sublist(3); // Get payload types after UDP/TLS/RTP/SAVPF
-
-        List<String> orderedPayloads = [];
-        
-        // Add preferred codecs first, maintaining their order from preferredCodecs map
-        for (String codecName in preferredCodecs.keys) {
-          int? payloadType = preferredCodecs[codecName];
-          if (payloadType != null && currentPayloads.contains(payloadType.toString())) {
-            orderedPayloads.add(payloadType.toString());
-          }
-        }
-        
-        // Add any other payloads that are present but not explicitly preferred, and not G726-32 (payload type 2)
-        for (String payload in currentPayloads) {
-          int? pt = int.tryParse(payload);
-          if (pt != null && !desiredPayloadTypes.contains(pt) && pt != 2) {
-            orderedPayloads.add(payload);
-          }
-        }
-        
-        newSdpLines.add('${parts[0]} ${parts[1]} ${parts[2]} ${orderedPayloads.join(' ')}');
-        audioPayloads = orderedPayloads; // Store for filtering rtpmap lines
-        audioLineProcessed = true;
-      } else {
-        newSdpLines.add(line);
+      print('❌ Error answering call with enhanced configuration: $e');
+      
+      // Fallback to basic configuration
+      try {
+        print('📞 Trying basic configuration as fallback...');
+        call.answer({
+          'mediaConstraints': {'audio': true, 'video': false},
+        });
+        print('📞 Call answered with basic configuration.');
+      } catch (e2) {
+        print('❌ Error with basic configuration: $e2');
+        setError('Failed to answer call: $e2');
+        rethrow;
       }
     }
-
-    // Second pass: Filter rtpmap and fmtp lines based on the new audioPayloads
-    List<String> finalSdpLines = [];
-    for (String line in newSdpLines) {
-      if (line.startsWith('a=rtpmap:')) {
-        RegExp rtpmapRegex = RegExp(r'a=rtpmap:(\d+)\s');
-        Match? match = rtpmapRegex.firstMatch(line);
-        if (match != null) {
-          int payloadType = int.parse(match.group(1)!);
-          if (audioPayloads.contains(payloadType.toString())) {
-            finalSdpLines.add(line);
-          }
-        }
-      } else if (line.startsWith('a=fmtp:')) {
-        RegExp fmtpRegex = RegExp(r'a=fmtp:(\d+)\s');
-        Match? match = fmtpRegex.firstMatch(line);
-        if (match != null) {
-          int payloadType = int.parse(match.group(1)!);
-          if (audioPayloads.contains(payloadType.toString())) {
-            finalSdpLines.add(line);
-          }
-        }
-      } else {
-        finalSdpLines.add(line);
-      }
-    }
-    
-    modifiedSdp = finalSdpLines.join('\r\n');
-    print('Modified SDP: \n$modifiedSdp');
-    
-    return RTCSessionDescription(modifiedSdp, sdp.type);
   }
 
-  void _answerWithSdpManipulation(Call call, Map<String, dynamic> options) {
-    print('📞 Setting up SDP manipulation callback...');
-    // Note: onLocalSdp might not be available in this version of sip_ua
-    // We'll try a different approach - answer with the options directly
-    try {
-      call.answer(options);
-    } catch (e) {
-      print('❌ Error answering call after SDP manipulation setup: $e');
-      rethrow;
-    }
-  }
+
 
   void makeCall(String target, {bool video = false}) {
     try {

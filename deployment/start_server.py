@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 # Configuration
-PORT = 8080
+PORT = 8081
 DIRECTORY = "web"
 
 def main():
