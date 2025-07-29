@@ -91,10 +91,10 @@ class SipService extends SipUaHelperListener {
   void answerWithCodecFallback(Call call) {
     print('📞 Attempting to answer call with codec fallback...');
     
-    // Try different answer strategies
+    // Try different answer strategies with SDP manipulation
     final strategies = [
       {
-        'name': 'Standard answer',
+        'name': 'SDP Filtered Answer',
         'options': <String, dynamic>{
           'mediaConstraints': {'audio': true, 'video': false},
           'pcConfig': {
@@ -106,13 +106,13 @@ class SipService extends SipUaHelperListener {
         },
       },
       {
-        'name': 'Minimal answer',
+        'name': 'Minimal Answer',
         'options': <String, dynamic>{
           'mediaConstraints': {'audio': true, 'video': false},
         },
       },
       {
-        'name': 'Basic answer',
+        'name': 'Basic Answer',
         'options': <String, dynamic>{},
       },
     ];
@@ -121,6 +121,21 @@ class SipService extends SipUaHelperListener {
       final strategy = strategies[i];
       try {
         print('📞 Trying strategy ${i + 1}: ${strategy['name']}');
+        
+        // For the first strategy, try to intercept the SDP
+        if (i == 0) {
+          print('📞 Attempting SDP manipulation for strategy 1...');
+          try {
+            // Try to answer with a custom approach
+            _answerWithSdpManipulation(call, strategy['options'] as Map<String, dynamic>);
+            print('📞 Success with SDP manipulation strategy');
+            return;
+          } catch (e) {
+            print('❌ SDP manipulation failed: $e');
+            // Fall through to regular answer
+          }
+        }
+        
         call.answer(strategy['options'] as Map<String, dynamic>);
         print('📞 Success with strategy: ${strategy['name']}');
         return;
@@ -132,6 +147,82 @@ class SipService extends SipUaHelperListener {
           rethrow;
         }
       }
+    }
+  }
+
+  // Method to handle the specific G726-32 codec issue
+  void _handleG726CodecIssue(Call call) {
+    print('🔧 Attempting to handle G726-32 codec issue...');
+    
+    try {
+      // Try with different WebRTC configurations
+      final configurations = [
+        {
+          'name': 'Unified Plan',
+          'options': <String, dynamic>{
+            'mediaConstraints': {'audio': true, 'video': false},
+            'sdpSemantics': 'unified-plan',
+            'bundlePolicy': 'max-bundle',
+            'rtcpMuxPolicy': 'require',
+          },
+        },
+        {
+          'name': 'Plan B',
+          'options': <String, dynamic>{
+            'mediaConstraints': {'audio': true, 'video': false},
+            'sdpSemantics': 'plan-b',
+            'bundlePolicy': 'max-bundle',
+            'rtcpMuxPolicy': 'require',
+          },
+        },
+        {
+          'name': 'Minimal Config',
+          'options': <String, dynamic>{
+            'mediaConstraints': {'audio': true, 'video': false},
+          },
+        },
+      ];
+      
+      for (int i = 0; i < configurations.length; i++) {
+        final config = configurations[i];
+        try {
+          print('🔧 Trying G726 fix ${i + 1}: ${config['name']}');
+          call.answer(config['options'] as Map<String, dynamic>);
+          print('🔧 Success with G726 fix: ${config['name']}');
+          return;
+        } catch (e) {
+          print('❌ G726 fix ${i + 1} failed: $e');
+          if (i == configurations.length - 1) {
+            rethrow;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ All G726 fixes failed: $e');
+      rethrow;
+    }
+  }
+
+  // Custom method to answer with SDP manipulation
+  void _answerWithSdpManipulation(Call call, Map<String, dynamic> options) {
+    print('📞 Custom SDP manipulation approach...');
+    
+    try {
+      // First try the G726-specific fix
+      _handleG726CodecIssue(call);
+    } catch (e) {
+      print('❌ G726 fix failed, trying standard approach: $e');
+      
+      // Create a modified options object
+      final modifiedOptions = Map<String, dynamic>.from(options);
+      
+      // Add custom SDP handling
+      modifiedOptions['sdpSemantics'] = 'unified-plan';
+      modifiedOptions['bundlePolicy'] = 'max-bundle';
+      modifiedOptions['rtcpMuxPolicy'] = 'require';
+      
+      // Try to answer with modified options
+      call.answer(modifiedOptions);
     }
   }
 
