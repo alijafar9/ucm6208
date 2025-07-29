@@ -7,7 +7,8 @@ import '../models/call_log.dart';
 import 'dart:async'; // Added for Completer
 
 class SimpleCallController extends GetxController {
-  final SipService sipService = Get.find<SipService>();
+  // Lazy-loaded SipService
+  SipService get sipService => Get.find<SipService>();
   
   // Observable variables
   final isRegistered = false.obs;
