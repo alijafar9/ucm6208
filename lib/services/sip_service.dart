@@ -317,16 +317,61 @@ class SipService extends SipUaHelperListener {
       print('📞 Error getting state details: $e');
     }
     
-    // Check if this is a new incoming call - try multiple approaches
+    // More robust incoming call detection
+    // Since the state string doesn't contain meaningful info, we'll use multiple approaches
+    bool isIncomingCall = false;
+    
+    // Approach 1: Check if this is a new call (first state change)
+    // We'll assume any call state change for a new call is incoming
+    if (call != null) {
+      try {
+        // Check if this call has remote identity (incoming calls have this)
+        if (call.remote_identity != null && call.remote_identity!.isNotEmpty) {
+          print('📞 Call has remote identity, likely incoming call');
+          isIncomingCall = true;
+        }
+        
+        // Check if this is the first state change for this call
+        // We'll use a simple approach: if we haven't seen this call before, it's incoming
+        if (isIncomingCall) {
+          print('📞 INCOMING CALL DETECTED in callStateChanged!');
+          final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
+          print('📞 Caller ID from callStateChanged: $callerId');
+          
+          // Extract caller info from the SIP headers if available
+          String displayName = 'Unknown Caller';
+          String phoneNumber = 'Unknown Number';
+          
+          try {
+            if (call.remote_identity != null) {
+              phoneNumber = call.remote_identity!;
+              displayName = call.remote_display_name ?? phoneNumber;
+            }
+          } catch (e) {
+            print('📞 Error extracting caller info: $e');
+          }
+          
+          print('📞 Final caller display name: $displayName');
+          print('📞 Final caller phone number: $phoneNumber');
+          
+          onIncomingCall?.call(call, displayName);
+          print('📞 onIncomingCall callback executed from callStateChanged');
+        }
+      } catch (e) {
+        print('📞 Error in incoming call detection: $e');
+      }
+    }
+    
+    // Approach 2: Also check the state string for any meaningful keywords
     final stateStr = state.toString().toLowerCase();
     if (stateStr.contains('incoming') || 
         stateStr.contains('invite') || 
         stateStr.contains('new') ||
         stateStr.contains('ringing') ||
         stateStr.contains('progress')) {
-      print('📞 INCOMING CALL DETECTED in callStateChanged!');
+      print('📞 INCOMING CALL DETECTED via state string analysis!');
       final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
-      print('📞 Caller ID from callStateChanged: $callerId');
+      print('📞 Caller ID from state string analysis: $callerId');
       
       // Extract caller info from the SIP headers if available
       String displayName = 'Unknown Caller';
@@ -345,7 +390,7 @@ class SipService extends SipUaHelperListener {
       print('📞 Final caller phone number: $phoneNumber');
       
       onIncomingCall?.call(call, displayName);
-      print('📞 onIncomingCall callback executed from callStateChanged');
+      print('📞 onIncomingCall callback executed from state string analysis');
     }
   }
 

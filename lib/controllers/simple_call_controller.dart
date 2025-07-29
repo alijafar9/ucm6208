@@ -64,7 +64,7 @@ class SimpleCallController extends GetxController {
 
   void register() {
     sipService.register(
-      username: '002',
+      username: '003',
       password: 'tr123',
       domain: '172.16.26.2',
       wsUri: 'ws://172.16.26.2:8088/ws',
