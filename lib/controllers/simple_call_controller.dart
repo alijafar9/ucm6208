@@ -237,13 +237,30 @@ class SimpleCallController extends GetxController {
   }
 
   void hangupCall() {
-    if (currentCall != null) {
-      // Stop recording if active
-      if (isRecording.value) {
-        stopCallRecording();
+    try {
+      print('📞 Attempting to hangup call...');
+      
+      if (currentCall != null) {
+        // Stop recording if active
+        if (isRecording.value) {
+          stopCallRecording();
+        }
+        
+        sipService.hangupCall(currentCall!);
+        print('📞 Call hung up successfully');
+      } else {
+        print('📞 No active call to hangup, resetting call state');
       }
       
-      sipService.hangupCall(currentCall!);
+      _resetCallState();
+      inCall.value = false;
+      setError('📞 Call ended');
+      
+    } catch (e) {
+      print('❌ Error hanging up call: $e');
+      setError('❌ Failed to hangup call: $e');
+      
+      // Reset state even if hangup fails
       _resetCallState();
       inCall.value = false;
     }

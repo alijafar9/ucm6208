@@ -467,7 +467,7 @@ class SimpleCallScreen extends StatelessWidget {
                             items: controller.audioInputDevices.map((deviceId) => 
                               DropdownMenuItem<String>(
                                 value: deviceId,
-                                child: Text('Microphone ${deviceId.substring(0, 8)}...'),
+                                child: Text('Microphone ${deviceId.length > 8 ? deviceId.substring(0, 8) + '...' : deviceId}'),
                               )
                             ).toList(),
                             onChanged: (deviceId) {
