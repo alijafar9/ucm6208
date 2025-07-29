@@ -158,7 +158,7 @@ class SipService extends SipUaHelperListener {
       // Try with different WebRTC configurations
       final configurations = [
         {
-          'name': 'Browser Native G726 Filter',
+          'name': 'WebRTC Native G726 Filter',
           'options': <String, dynamic>{
             'mediaConstraints': {'audio': true, 'video': false},
             'pcConfig': {
@@ -195,8 +195,8 @@ class SipService extends SipUaHelperListener {
           
           // For the first strategy, try a more aggressive approach
           if (i == 0) {
-            print('🔧 Using browser native G726 filter approach...');
-            _answerWithBrowserNativeG726Handling(call, config['options'] as Map<String, dynamic>);
+            print('🔧 Using WebRTC native G726 filter approach...');
+            _answerWithWebRTCNativeG726Handling(call, config['options'] as Map<String, dynamic>);
           } else {
             call.answer(config['options'] as Map<String, dynamic>);
           }
@@ -216,15 +216,15 @@ class SipService extends SipUaHelperListener {
     }
   }
 
-  // Custom method to handle G726-32 with browser-native approach
-  void _answerWithBrowserNativeG726Handling(Call call, Map<String, dynamic> options) {
-    print('🔧 Browser native G726 handling with WebRTC configuration...');
+  // Custom method to handle G726-32 with WebRTC-native approach
+  void _answerWithWebRTCNativeG726Handling(Call call, Map<String, dynamic> options) {
+    print('🔧 WebRTC native G726 handling with custom configuration...');
     
     try {
-      // Create a modified options object with browser-specific G726 handling
+      // Create a modified options object with WebRTC-specific G726 handling
       final modifiedOptions = Map<String, dynamic>.from(options);
       
-      // Add specific configurations for browser-native G726 handling
+      // Add specific configurations for WebRTC-native G726 handling
       modifiedOptions['pcConfig'] = {
         'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
         'iceTransportPolicy': 'all',
@@ -252,7 +252,7 @@ class SipService extends SipUaHelperListener {
       // Try to answer with the modified configuration
       call.answer(modifiedOptions);
     } catch (e) {
-      print('❌ Browser native G726 handling failed: $e');
+      print('❌ WebRTC native G726 handling failed: $e');
       print('🔧 Falling back to alternative WebRTC configs...');
       _tryAlternativeWebRTCConfigs(call);
     }
@@ -264,7 +264,7 @@ class SipService extends SipUaHelperListener {
     
     final alternativeConfigs = [
       {
-        'name': 'Chrome Enhanced',
+        'name': 'Chrome WebRTC Enhanced',
         'options': <String, dynamic>{
           'mediaConstraints': {
             'audio': {
@@ -290,7 +290,7 @@ class SipService extends SipUaHelperListener {
         },
       },
       {
-        'name': 'Firefox Enhanced',
+        'name': 'Firefox WebRTC Enhanced',
         'options': <String, dynamic>{
           'mediaConstraints': {
             'audio': {
@@ -307,7 +307,7 @@ class SipService extends SipUaHelperListener {
         },
       },
       {
-        'name': 'Safari Enhanced',
+        'name': 'Safari WebRTC Enhanced',
         'options': <String, dynamic>{
           'mediaConstraints': {
             'audio': {
