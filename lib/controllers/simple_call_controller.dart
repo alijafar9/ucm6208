@@ -122,7 +122,7 @@ class SimpleCallController extends GetxController {
 
   void hangupCall() {
     if (currentCall != null) {
-      sipService.hangup(currentCall!);
+      sipService.hangupCall(currentCall!);
       _resetCallState();
       inCall.value = false;
     }
@@ -130,14 +130,14 @@ class SimpleCallController extends GetxController {
 
   void muteCall() {
     if (currentCall != null) {
-      sipService.mute(currentCall!);
+      sipService.muteMic(currentCall!);
       isMuted.value = true;
     }
   }
 
   void unmuteCall() {
     if (currentCall != null) {
-      sipService.unmute(currentCall!);
+      sipService.unmuteMic(currentCall!);
       isMuted.value = false;
     }
   }
