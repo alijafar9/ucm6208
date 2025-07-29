@@ -309,6 +309,23 @@ class SimpleCallScreen extends StatelessWidget {
                       ],
                     ),
                     
+                    const SizedBox(height: 8),
+                    
+                    // Help button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          onPressed: controller.showMicrophoneHelp,
+                          icon: const Icon(Icons.help_outline, size: 16),
+                          label: const Text('Microphone Help'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.blue[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    
                     const SizedBox(height: 12),
                     
                     // Device dropdown
