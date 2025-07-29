@@ -6,510 +6,653 @@ import 'widgets/status_text.dart';
 import 'widgets/recordings_panel.dart';
 
 class SimpleCallScreen extends StatelessWidget {
-  const SimpleCallScreen({super.key});
+  const SimpleCallScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<SimpleCallController>();
-
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Simple Call')),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Obx(() => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (controller.errorMessage.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  color: Colors.red[100],
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Flexible(child: Text(controller.errorMessage.value, style: const TextStyle(color: Colors.red))),
-                    ],
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue[50]!, Colors.purple[50]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.blue[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.phone_in_talk,
+                            color: Colors.blue,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Simple Call',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              Text(
+                                'SIP Client for UCM6208',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'DEBUG',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-
-              if (controller.hasIncomingCall.value)
-                // Incoming call card design
-                Container(
-                  width: 320,
-                  padding: const EdgeInsets.all(24),
-                  margin: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Phone icon
-                      Container(
-                        width: 80,
-                        height: 80,
+                  
+                  // Error Message
+                  Obx(() => controller.errorMessage.isNotEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: const Icon(
-                          Icons.phone,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Caller name
-                      Text(
-                        controller.callerId.value.isNotEmpty 
-                            ? controller.callerId.value 
-                            : 'Unknown Caller',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      
-                      // Caller number
-                      Text(
-                        controller.callerId.value.isNotEmpty 
-                            ? controller.callerId.value 
-                            : 'No number',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      // Registered client badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green[200]!),
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red[200]!),
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: Colors.green[600],
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Registered Client',
-                              style: TextStyle(
-                                color: Colors.green[700],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                controller.errorMessage.value,
+                                style: const TextStyle(color: Colors.red),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Answer and Decline buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          // Decline button
-                          Expanded(
-                            child: Container(
-                              height: 56,
-                              margin: const EdgeInsets.only(right: 4),
-                              child: ElevatedButton(
-                                onPressed: controller.rejectCall,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.call_end, size: 20),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      'Decline',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          // Answer button
-                          Expanded(
-                            child: Container(
-                              height: 56,
-                              margin: const EdgeInsets.only(left: 4),
-                              child: ElevatedButton(
-                                onPressed: controller.answerCall,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.call, size: 20),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      'Answer',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                )
-              else if (controller.inCall.value)
-                Column(
-                  children: [
-                    StatusText(status: 'In call'),
-                    const SizedBox(height: 16),
-                    
-                    // Recording status
-                    Obx(() => controller.isRecording.value
-                      ? Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.red[100],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red[300]!),
-                          ),
-                          child: Row(
+                      )
+                    : const SizedBox.shrink()),
+                  
+                  // Call Status
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        if (controller.hasIncomingCall.value)
+                          Column(
                             children: [
-                              const Icon(Icons.fiber_manual_record, color: Colors.red, size: 16),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Recording: ${controller.recordingDuration.value.inSeconds}s',
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
+                              CallerIdText(callerId: controller.callerId.value),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: controller.answerCall,
+                                      icon: const Icon(Icons.call, size: 20),
+                                      label: const Text('Answer'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: controller.stopCallRecording,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                ),
-                                child: const Text('Stop'),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: controller.rejectCall,
+                                      icon: const Icon(Icons.call_end, size: 20),
+                                      label: const Text('Decline'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                        )
-                      : const SizedBox.shrink()),
-                    
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: controller.hangupCall,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: const Text('Hang Up'),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: controller.isMuted.value ? controller.unmuteCall : controller.muteCall,
-                          child: Text(controller.isMuted.value ? 'Unmute' : 'Mute'),
-                        ),
-                        const SizedBox(width: 16),
-                        Obx(() => ElevatedButton(
-                          onPressed: controller.isRecording.value ? controller.stopCallRecording : controller.startCallRecording,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: controller.isRecording.value ? Colors.red : Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(controller.isRecording.value ? 'Stop Recording' : 'Start Recording'),
-                        )),
+                          )
+                        else if (controller.inCall.value)
+                          Column(
+                            children: [
+                              const StatusText(status: 'In call'),
+                              const SizedBox(height: 16),
+                              
+                              // Recording status
+                              Obx(() => controller.isRecording.value
+                                ? Container(
+                                    padding: const EdgeInsets.all(12),
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red[50],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.red[200]!),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.fiber_manual_record, color: Colors.red, size: 20),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Recording in progress...',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                              Obx(() => Text(
+                                                'Duration: ${controller.recordingDuration.value.inSeconds}s',
+                                                style: const TextStyle(color: Colors.red),
+                                              )),
+                                            ],
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: controller.stopCallRecording,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: const Text('Stop'),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : const SizedBox.shrink()),
+                              
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: controller.hangupCall,
+                                    icon: const Icon(Icons.call_end, size: 20),
+                                    label: const Text('Hang Up'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  Obx(() => ElevatedButton.icon(
+                                    onPressed: controller.isMuted.value ? controller.unmuteCall : controller.muteCall,
+                                    icon: Icon(controller.isMuted.value ? Icons.mic_off : Icons.mic, size: 20),
+                                    label: Text(controller.isMuted.value ? 'Unmute' : 'Mute'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: controller.isMuted.value ? Colors.orange : Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  )),
+                                  Obx(() => ElevatedButton.icon(
+                                    onPressed: controller.isRecording.value ? controller.stopCallRecording : controller.startCallRecording,
+                                    icon: Icon(controller.isRecording.value ? Icons.stop : Icons.fiber_manual_record, size: 20),
+                                    label: Text(controller.isRecording.value ? 'Stop Recording' : 'Start Recording'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: controller.isRecording.value ? Colors.red : Colors.green,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ],
+                          )
+                        else
+                          const StatusText(status: 'No incoming call'),
                       ],
                     ),
-                  ],
-                )
-              else
-                const StatusText(status: 'No incoming call'),
-              
-              const SizedBox(height: 20),
-              
-              // Microphone Test Section
-              Container(
-                width: 400,
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.mic, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Microphone Test',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Status text
-                    if (controller.microphoneTestStatus.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: controller.microphoneTestStatus.value.contains('✅') 
-                              ? Colors.green[100] 
-                              : controller.microphoneTestStatus.value.contains('❌') 
-                                  ? Colors.red[100] 
-                                  : Colors.orange[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          controller.microphoneTestStatus.value,
-                          style: TextStyle(
-                            color: controller.microphoneTestStatus.value.contains('✅') 
-                                ? Colors.green[800] 
-                                : controller.microphoneTestStatus.value.contains('❌') 
-                                    ? Colors.red[800] 
-                                    : Colors.orange[800],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    
-                    // Microphone test buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: controller.testMicrophonePermission,
-                          icon: const Icon(Icons.mic, size: 16),
-                          label: const Text('Test Microphone'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[600],
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: controller.listAudioDevices,
-                          icon: const Icon(Icons.computer, size: 16),
-                          label: const Text('List Devices'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[600],
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: controller.testAudioOutput,
-                          icon: const Icon(Icons.volume_up, size: 16),
-                          label: const Text('Test Audio'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange[600],
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Help button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          onPressed: controller.showMicrophoneHelp,
-                          icon: const Icon(Icons.help_outline, size: 16),
-                          label: const Text('Microphone Help'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.blue[600],
-                          ),
+                  ),
+                  
+                  // Microphone Test Section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.blue[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Device dropdown
-                    if (controller.audioInputDevices.isNotEmpty)
-                      DropdownButton<String>(
-                        value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
-                        hint: const Text('Select Microphone'),
-                        isExpanded: true,
-                        items: controller.audioInputDevices.map((device) => DropdownMenuItem(
-                          value: device.deviceId,
-                          child: Text(device.label ?? 'Unknown Mic'),
-                        )).toList(),
-                        onChanged: (val) {
-                          if (val != null) controller.selectAudioInput(val);
-                        },
-                      ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Outgoing call section
-              Container(
-                width: 400,
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Outgoing Call',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            onChanged: (val) => controller.outgoingTarget.value = val,
-                            decoration: const InputDecoration(
-                              labelText: 'Call extension or SIP URI',
-                              border: OutlineInputBorder(),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.mic, color: Colors.blue, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Microphone Test',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Status text
+                        if (controller.microphoneTestStatus.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: controller.microphoneTestStatus.value.contains('✅') 
+                                  ? Colors.green[50] 
+                                  : controller.microphoneTestStatus.value.contains('❌') 
+                                      ? Colors.red[50] 
+                                      : Colors.orange[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: controller.microphoneTestStatus.value.contains('✅') 
+                                    ? Colors.green[200]! 
+                                    : controller.microphoneTestStatus.value.contains('❌') 
+                                        ? Colors.red[200]! 
+                                        : Colors.orange[200]!,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  controller.microphoneTestStatus.value.contains('✅') 
+                                      ? Icons.check_circle 
+                                      : controller.microphoneTestStatus.value.contains('❌') 
+                                          ? Icons.error 
+                                          : Icons.info,
+                                  color: controller.microphoneTestStatus.value.contains('✅') 
+                                      ? Colors.green 
+                                      : controller.microphoneTestStatus.value.contains('❌') 
+                                          ? Colors.red 
+                                          : Colors.orange,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    controller.microphoneTestStatus.value,
+                                    style: TextStyle(
+                                      color: controller.microphoneTestStatus.value.contains('✅') 
+                                          ? Colors.green[800] 
+                                          : controller.microphoneTestStatus.value.contains('❌') 
+                                              ? Colors.red[800] 
+                                              : Colors.orange[800],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        
+                        // Test buttons
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: controller.testMicrophonePermission,
+                              icon: const Icon(Icons.mic, size: 18),
+                              label: const Text('Test Microphone'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: controller.listAudioDevices,
+                              icon: const Icon(Icons.devices, size: 18),
+                              label: const Text('List Devices'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: controller.testAudioOutput,
+                              icon: const Icon(Icons.volume_up, size: 18),
+                              label: const Text('Test Audio'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Help button
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: controller.showMicrophoneHelp,
+                            icon: const Icon(Icons.help_outline, size: 16),
+                            label: const Text('Microphone Help'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.blue[600],
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: controller.makeOutgoingCall,
-                          child: const Text('Call'),
+                        
+                        // Device dropdown
+                        if (controller.audioInputDevices.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          DropdownButton<String>(
+                            value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
+                            hint: const Text('Select Microphone'),
+                            isExpanded: true,
+                            items: controller.audioInputDevices.map((device) => DropdownMenuItem(
+                              value: device.deviceId,
+                              child: Text(device.label ?? 'Unknown Mic'),
+                            )).toList(),
+                            onChanged: (val) {
+                              if (val != null) controller.selectAudioInput(val);
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Outgoing call section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              
-              // Test button for incoming call interface
-              Container(
-                width: 400,
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[200]!),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Debug Tools',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ElevatedButton(
-                          onPressed: controller.testIncomingCallInterface,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('🧪 Test Incoming Call Interface'),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.purple[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.call_made, color: Colors.purple, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Outgoing Call',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple,
+                              ),
+                            ),
+                          ],
                         ),
-                        ElevatedButton(
-                          onPressed: controller.checkWebRTCStatus,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple[600],
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('🔍 Check WebRTC'),
-                        ),
-                        ElevatedButton(
-                          onPressed: controller.toggleRecordingsPanel,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red[600],
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('🎙️ Recordings'),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                onChanged: (val) => controller.outgoingTarget.value = val,
+                                decoration: InputDecoration(
+                                  labelText: 'Call extension or SIP URI',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: controller.makeOutgoingCall,
+                              icon: const Icon(Icons.call, size: 18),
+                              label: const Text('Call'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  
+                  // Debug Tools Section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange[200]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.bug_report, color: Colors.orange, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Debug Tools',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: controller.testIncomingCallInterface,
+                              icon: const Icon(Icons.science, size: 18),
+                              label: const Text('Test Incoming Call'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: controller.checkWebRTCStatus,
+                              icon: const Icon(Icons.bug_report, size: 18),
+                              label: const Text('Check WebRTC'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: controller.toggleRecordingsPanel,
+                              icon: const Icon(Icons.record_voice_over, size: 18),
+                              label: const Text('Recordings'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[600],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Recordings Panel
+                  Obx(() => controller.showRecordingsPanel.value
+                    ? RecordingsPanel(controller: controller)
+                    : const SizedBox.shrink()),
+                  
+                  const SizedBox(height: 40),
+                ],
               ),
-              
-              // Recordings Panel
-              Obx(() => controller.showRecordingsPanel.value
-                ? RecordingsPanel(controller: controller)
-                : const SizedBox.shrink()),
-              
-              const SizedBox(height: 40),
-            ],
-          )),
+            ),
+          ),
         ),
       ),
     );
