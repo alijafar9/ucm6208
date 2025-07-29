@@ -12,6 +12,7 @@ class SimpleCallController extends GetxController {
   
   // Observable variables
   final isRegistered = false.obs;
+  final isRegistering = false.obs;
   final isIncomingCall = false.obs;
   final isOutgoingCall = false.obs;
   final isCallActive = false.obs;
@@ -65,6 +66,34 @@ class SimpleCallController extends GetxController {
       
       setError('🎧 Remote stream captured!\n\nNow you can record both mic + remote audio.\n\nClick "Start Recording" to record the full conversation.');
     };
+    
+    // Set up error callback for registration status
+    sipService.onError = (error) {
+      print('📞 SIP service error: $error');
+      
+      // Check if this is a registration success message
+      if (error.contains('✅ Successfully registered')) {
+        isRegistered.value = true;
+        isRegistering.value = false;
+        setError(error);
+      } else if (error.contains('❌ Registration failed') || error.contains('❌ Auto-registration failed')) {
+        isRegistered.value = false;
+        isRegistering.value = false;
+        setError(error);
+      } else if (error.contains('📞 Registration status')) {
+        // Keep registration status as is
+        setError(error);
+      } else {
+        // For other errors, just show them
+        setError(error);
+      }
+    };
+    
+    // Auto-register after a short delay
+    Future.delayed(Duration(seconds: 2), () {
+      print('📞 Auto-registering with SIP server...');
+      register();
+    });
   }
 
   void _initializeAudioDevices() {
@@ -148,6 +177,7 @@ class SimpleCallController extends GetxController {
   void register() {
     try {
       print('📞 Attempting to register with SIP server...');
+      isRegistering.value = true;
       isRegistered.value = false;
       errorMessage.value = '';
       
@@ -161,11 +191,12 @@ class SimpleCallController extends GetxController {
       );
       
       print('📞 Registration request sent');
-      setError('📞 Registering...\n\nPlease wait while connecting to the SIP server.\n\nYou should see "Registered" status when successful.');
+      setError('📞 Auto-registering...\n\nPlease wait while connecting to the SIP server.\n\nYou should see "Registered" status when successful.');
       
     } catch (e) {
       print('❌ Error during registration: $e');
-      setError('❌ Registration failed: $e\n\nPlease check:\n1. Your UCM6208 is running\n2. The SIP settings are correct\n3. Network connectivity');
+      isRegistering.value = false;
+      setError('❌ Auto-registration failed: $e\n\nPlease check:\n1. Your UCM6208 is running\n2. The SIP settings are correct\n3. Network connectivity\n\nYou can try manual registration by clicking "Register" again.');
     }
   }
 

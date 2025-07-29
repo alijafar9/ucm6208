@@ -324,6 +324,22 @@ class SipService extends SipUaHelperListener {
     print('📞 Registration state changed: $state');
     // Just log the state as a string since we don't know the exact enum values
     print('📞 Registration state: $state');
+    
+    // Handle registration status
+    final stateStr = state.toString().toLowerCase();
+    if (stateStr.contains('registered') || stateStr.contains('success')) {
+      print('✅ Registration successful!');
+      onError?.call('✅ Successfully registered with SIP server!\n\nYou can now make and receive calls.');
+    } else if (stateStr.contains('failed') || stateStr.contains('error') || stateStr.contains('timeout')) {
+      print('❌ Registration failed: $state');
+      onError?.call('❌ Registration failed: $state\n\nPlease check your UCM6208 settings and network connection.');
+    } else if (stateStr.contains('unregistered')) {
+      print('📞 Registration ended: $state');
+      onError?.call('📞 Registration ended: $state\n\nYou can register again by clicking the Register button.');
+    } else {
+      print('📞 Registration status: $state');
+      onError?.call('📞 Registration status: $state\n\nPlease wait...');
+    }
   }
 
   @override

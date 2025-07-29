@@ -143,6 +143,62 @@ class SimpleCallScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
+                        // Registration Status
+                        Obx(() => Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: controller.isRegistered.value 
+                                ? Colors.green[50] 
+                                : controller.isRegistering.value 
+                                    ? Colors.orange[50] 
+                                    : Colors.red[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: controller.isRegistered.value 
+                                  ? Colors.green[200]! 
+                                  : controller.isRegistering.value 
+                                      ? Colors.orange[200]! 
+                                      : Colors.red[200]!,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                controller.isRegistered.value 
+                                    ? Icons.check_circle 
+                                    : controller.isRegistering.value 
+                                        ? Icons.pending 
+                                        : Icons.error,
+                                color: controller.isRegistered.value 
+                                    ? Colors.green 
+                                    : controller.isRegistering.value 
+                                        ? Colors.orange 
+                                        : Colors.red,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  controller.isRegistered.value 
+                                      ? '✅ Registered with SIP Server'
+                                      : controller.isRegistering.value 
+                                          ? '🔄 Auto-registering...'
+                                          : '❌ Not Registered',
+                                  style: TextStyle(
+                                    color: controller.isRegistered.value 
+                                        ? Colors.green[800] 
+                                        : controller.isRegistering.value 
+                                            ? Colors.orange[800] 
+                                            : Colors.red[800],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
                         if (controller.hasIncomingCall.value)
                           Column(
                             children: [
