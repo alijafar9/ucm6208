@@ -350,7 +350,8 @@ class SipService extends SipUaHelperListener {
     
     if (stateStr.contains('200') || 
         (stateStr.contains('registered') && stateStr.contains('ok')) ||
-        stateStr.contains('success')) {
+        stateStr.contains('success') ||
+        stateStr.contains('registered => code: [200]')) {
       print('✅ Registration successful!');
       onError?.call('✅ Successfully registered with SIP server!\n\nYou can now make and receive calls.');
     } else if (stateStr.contains('401') || 
