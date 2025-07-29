@@ -421,13 +421,26 @@ class SimpleCallScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: controller.testIncomingCallInterface,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('🧪 Test Incoming Call Interface'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: controller.testIncomingCallInterface,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('🧪 Test Incoming Call Interface'),
+                        ),
+                        ElevatedButton(
+                          onPressed: controller.checkWebRTCStatus,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple[600],
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('🔍 Check WebRTC'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

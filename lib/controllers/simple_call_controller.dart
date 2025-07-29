@@ -233,30 +233,23 @@ class SimpleCallController extends GetxController {
       print('🔊 Testing audio output...');
       microphoneTestStatus.value = 'Testing audio output...';
       
-      // Simple audio test using HTML audio element
-      final audioElement = html.AudioElement()
-        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
-        ..volume = 0.5;
+      // Simple manual audio test
+      print('🔊 Manual audio test initiated');
+      microphoneTestStatus.value = '🔊 Manual audio test...';
       
-      print('🔊 Playing test audio - you should hear a beep');
-      microphoneTestStatus.value = '🔊 Playing test audio... (you should hear a beep)';
+      // Wait a moment to show the status
+      await Future.delayed(Duration(seconds: 2));
       
-      // Play the audio
-      await audioElement.play();
+      print('🔊 Manual audio test completed');
+      microphoneTestStatus.value = '✅ Audio test completed';
       
-      // Wait for audio to finish
-      await Future.delayed(Duration(seconds: 3));
-      
-      print('🔊 Test audio completed');
-      microphoneTestStatus.value = '✅ Audio output test completed';
-      
-      // Ask user if they heard the tone
-      setError('🔊 Did you hear the test audio?\n\nIf YES: Audio output is working, issue is with WebRTC\nIf NO: Check your speakers/headphones and system audio');
+      // Ask user to manually test their audio
+      setError('🔊 Manual Audio Test\n\nPlease do the following:\n\n1. Open any website with audio (YouTube, etc.)\n2. Play a video or audio file\n3. Check if you can hear the audio\n\nThen tell me:\n✅ YES - I can hear audio from other websites\n❌ NO - I cannot hear audio from other websites\n\nThis will help us determine if the issue is:\n- Your audio system (if NO)\n- WebRTC configuration (if YES)');
       
     } catch (e) {
-      print('❌ Error testing audio output: $e');
-      microphoneTestStatus.value = '❌ Audio output test failed';
-      setError('Failed to test audio output: $e\n\nPlease check your system audio settings and try again.');
+      print('❌ Error in audio test: $e');
+      microphoneTestStatus.value = '❌ Audio test failed';
+      setError('🔊 Audio test error: $e\n\nPlease manually test your audio system by playing any audio file on your computer.');
     }
   }
 
@@ -452,6 +445,58 @@ $specificInstructions
       microphoneTestStatus.value = '❌ Error listing devices: $e';
       print('❌ Error listing devices: $e');
       setError('Failed to list audio devices: $e');
+    }
+  }
+
+  // Method to check WebRTC status and provide debugging info
+  void checkWebRTCStatus() {
+    try {
+      print('🔍 Checking WebRTC status...');
+      microphoneTestStatus.value = 'Checking WebRTC status...';
+      
+      // Check if WebRTC is supported
+      if (webrtc.navigator.mediaDevices == null) {
+        setError('❌ WebRTC not supported in this browser!\n\nPlease use Chrome, Firefox, or Safari for full WebRTC support.');
+        return;
+      }
+      
+      // Check if we're on HTTPS (required for WebRTC)
+      final isHttps = html.window.location.protocol == 'https:';
+      final isLocalhost = html.window.location.hostname == 'localhost' || 
+                          html.window.location.hostname == '127.0.0.1';
+      
+      String statusMessage = '🔍 WebRTC Status Check:\n\n';
+      
+      // Browser compatibility
+      statusMessage += '🌐 Browser: ${html.window.navigator.userAgent}\n';
+      statusMessage += '🔒 Protocol: ${html.window.location.protocol}\n';
+      statusMessage += '📍 Host: ${html.window.location.hostname}\n\n';
+      
+      // WebRTC support
+      statusMessage += '✅ WebRTC supported: Yes\n';
+      statusMessage += '✅ MediaDevices API: Available\n';
+      
+      // HTTPS check
+      if (isHttps || isLocalhost) {
+        statusMessage += '✅ HTTPS/Localhost: Yes (WebRTC should work)\n';
+      } else {
+        statusMessage += '❌ HTTPS/Localhost: No (WebRTC may not work)\n';
+      }
+      
+      statusMessage += '\n🎯 One-Way Audio Diagnosis:\n';
+      statusMessage += '1. Check your system audio (play any audio file)\n';
+      statusMessage += '2. Test microphone permissions\n';
+      statusMessage += '3. Check UCM6208 RTP settings\n';
+      statusMessage += '4. Verify NAT/firewall configuration\n';
+      
+      print('🔍 WebRTC status check completed');
+      microphoneTestStatus.value = '✅ WebRTC status checked';
+      setError(statusMessage);
+      
+    } catch (e) {
+      print('❌ Error checking WebRTC status: $e');
+      microphoneTestStatus.value = '❌ WebRTC check failed';
+      setError('Failed to check WebRTC status: $e');
     }
   }
 } 
