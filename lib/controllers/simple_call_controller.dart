@@ -368,123 +368,223 @@ class SimpleCallController extends GetxController {
       AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.phone_in_talk,
-                color: Colors.red[700],
-                size: 24,
-              ),
+        elevation: 20,
+        title: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.red[50]!, Colors.red[100]!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(width: 12),
-            const Text(
-              'Incoming Call',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.phone_in_talk,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Incoming Call',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: Colors.red,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Someone is calling you...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
+        content: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Caller information card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[50]!, Colors.blue[100]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.blue[200]!, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[200],
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            callerId,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Incoming call...',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
+              const SizedBox(height: 24),
+              
+              // Action buttons
+              Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.blue[100],
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.blue[700],
-                      size: 24,
+                  Expanded(
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green[400]!, Colors.green[600]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Get.back(); // Close dialog
+                          answerCall();
+                        },
+                        icon: const Icon(Icons.call, size: 24, color: Colors.white),
+                        label: const Text(
+                          'Answer',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          callerId,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red[400]!, Colors.red[600]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        const Text(
-                          'Incoming call...',
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Get.back(); // Close dialog
+                          rejectCall();
+                        },
+                        icon: const Icon(Icons.call_end, size: 24, color: Colors.white),
+                        label: const Text(
+                          'Decline',
                           style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                      ],
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Get.back(); // Close dialog
-                      answerCall();
-                    },
-                    icon: const Icon(Icons.call, size: 20),
-                    label: const Text('Answer'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Get.back(); // Close dialog
-                      rejectCall();
-                    },
-                    icon: const Icon(Icons.call_end, size: 20),
-                    label: const Text('Decline'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       barrierDismissible: false, // User must choose Answer or Decline
+      barrierColor: Colors.black54,
     );
   }
 
