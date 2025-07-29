@@ -16,7 +16,7 @@ class SipService extends SipUaHelperListener {
     required String username,
     required String password,
     required String domain,
-    required String wsUri,
+    String? wsUri,
     String? displayName,
   }) {
     try {
@@ -28,10 +28,16 @@ class SipService extends SipUaHelperListener {
       
       UaSettings settings = UaSettings();
       
-      // WebSocket settings
-      settings.webSocketUrl = wsUri;
-      settings.webSocketSettings.extraHeaders = {};
-      settings.webSocketSettings.allowBadCertificate = true;
+      // WebSocket settings (if provided)
+      if (wsUri != null) {
+        settings.webSocketUrl = wsUri;
+        settings.webSocketSettings.extraHeaders = {};
+        settings.webSocketSettings.allowBadCertificate = true;
+        settings.transportType = TransportType.WS;
+      } else {
+        // Use TCP transport
+        settings.transportType = TransportType.TCP;
+      }
       
       // SIP URI and authentication
       settings.uri = 'sip:$username@$domain';
@@ -39,9 +45,6 @@ class SipService extends SipUaHelperListener {
       settings.password = password;
       settings.displayName = displayName ?? username;
       settings.userAgent = 'Dart SIP Client';
-      
-      // Transport type (WebSocket)
-      settings.transportType = TransportType.WS;
       
       // Registration settings
       settings.register = true;
@@ -70,7 +73,6 @@ class SipService extends SipUaHelperListener {
       
       print('🚀 Starting SIP helper with settings...');
       print('🚀 Settings URI: ${settings.uri}');
-      print('🚀 Settings WebSocket URL: ${settings.webSocketUrl}');
       print('🚀 Settings Register: ${settings.register}');
       print('🚀 Settings Registrar Server: ${settings.registrarServer}');
       

@@ -194,8 +194,8 @@ class SimpleCallController extends GetxController {
       sipService.register(
         username: '003',
         password: 'tr123',
-        domain: '172.16.26.2',
-        wsUri: 'wss://172.16.26.2:8089/wss',
+        domain: '172.16.26.2:5060', // Added explicit SIP port
+        wsUri: null, // No WebSocket - use UDP instead
         displayName: 'Flutter SIP Client',
       );
       
