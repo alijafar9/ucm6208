@@ -425,7 +425,7 @@ class SimpleCallScreen extends StatelessWidget {
                               ),
                             ),
                             ElevatedButton.icon(
-                              onPressed: controller.testAudioOutput,
+                              onPressed: controller.playTestAudio,
                               icon: const Icon(Icons.volume_up, size: 18),
                               label: const Text('Test Audio'),
                               style: ElevatedButton.styleFrom(
@@ -457,16 +457,23 @@ class SimpleCallScreen extends StatelessWidget {
                         // Device dropdown
                         if (controller.audioInputDevices.isNotEmpty) ...[
                           const SizedBox(height: 16),
-                          DropdownButton<String>(
-                            value: controller.selectedAudioInputId.value.isNotEmpty ? controller.selectedAudioInputId.value : null,
-                            hint: const Text('Select Microphone'),
-                            isExpanded: true,
-                            items: controller.audioInputDevices.map((device) => DropdownMenuItem(
-                              value: device.deviceId,
-                              child: Text(device.label ?? 'Unknown Mic'),
-                            )).toList(),
-                            onChanged: (val) {
-                              if (val != null) controller.selectAudioInput(val);
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              labelText: 'Audio Input Device',
+                              border: OutlineInputBorder(),
+                            ),
+                            value: controller.selectedAudioInputId.value.isNotEmpty ?
+                              controller.selectedAudioInputId.value : null,
+                            items: controller.audioInputDevices.map((deviceId) => 
+                              DropdownMenuItem<String>(
+                                value: deviceId,
+                                child: Text('Microphone ${deviceId.substring(0, 8)}...'),
+                              )
+                            ).toList(),
+                            onChanged: (deviceId) {
+                              if (deviceId != null) {
+                                controller.selectAudioInput(deviceId);
+                              }
                             },
                           ),
                         ],

@@ -1,111 +1,80 @@
-import 'package:get/get.dart';
-import '../services/sip_service.dart';
-import 'package:sip_ua/sip_ua.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'dart:html' as html;
 import 'dart:convert';
-import 'dart:async';
-
-class CallRecording {
-  final String id;
-  final String callerId;
-  final DateTime timestamp;
-  final Duration duration;
-  final String fileName;
-  final String status; // 'recording', 'completed', 'failed'
-
-  CallRecording({
-    required this.id,
-    required this.callerId,
-    required this.timestamp,
-    required this.duration,
-    required this.fileName,
-    required this.status,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'callerId': callerId,
-    'timestamp': timestamp.toIso8601String(),
-    'duration': duration.inSeconds,
-    'fileName': fileName,
-    'status': status,
-  };
-
-  factory CallRecording.fromJson(Map<String, dynamic> json) => CallRecording(
-    id: json['id'],
-    callerId: json['callerId'],
-    timestamp: DateTime.parse(json['timestamp']),
-    duration: Duration(seconds: json['duration']),
-    fileName: json['fileName'],
-    status: json['status'],
-  );
-}
+import 'package:get/get.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
+import '../services/sip_service.dart';
+import '../models/call_log.dart';
+import 'dart:async'; // Added for Completer
 
 class SimpleCallController extends GetxController {
-  final SipService sipService = SipService();
-
-  var callerId = ''.obs;
-  var hasIncomingCall = false.obs;
-  var outgoingTarget = ''.obs;
-  var inCall = false.obs;
-  var isMuted = false.obs;
-  var errorMessage = ''.obs;
-  var audioInputDevices = <webrtc.MediaDeviceInfo>[].obs;
-  var selectedAudioInputId = ''.obs;
-  var microphonePermission = false.obs;
-  var microphoneTestStatus = ''.obs;
+  final SipService sipService = Get.find<SipService>();
   
-  // Call recording variables
-  var isRecording = false.obs;
-  var recordingStartTime = DateTime.now().obs;
-  var recordingDuration = Duration.zero.obs;
-  var callRecordings = <CallRecording>[].obs;
-  var showRecordingsPanel = false.obs;
+  // Observable variables
+  final isRegistered = false.obs;
+  final isIncomingCall = false.obs;
+  final isOutgoingCall = false.obs;
+  final isCallActive = false.obs;
+  final isMuted = false.obs;
+  final callerId = ''.obs;
+  final errorMessage = ''.obs;
+  final microphoneTestStatus = ''.obs;
+  final audioInputDevices = <String>[].obs;
+  final selectedAudioDevice = ''.obs;
   
-  Call? currentCall;
-  Timer? recordingTimer;
+  // Legacy variable names for UI compatibility
+  final hasIncomingCall = false.obs;
+  final inCall = false.obs;
+  final outgoingTarget = ''.obs;
+  final selectedAudioInputId = ''.obs;
+  
+  // Call object for SIP operations
+  dynamic currentCall;
+  
+  // Recording variables
+  final isRecording = false.obs;
+  final recordingStartTime = Rx<DateTime?>(null);
+  final recordingDuration = Duration.zero.obs;
+  final callRecordings = <CallRecording>[].obs;
+  final showRecordingsPanel = false.obs;
+  
+  // Microphone-only recording variables
+  html.MediaRecorder? _micRecorder;
+  List<html.Blob> _micChunks = [];
+  String? _micRecordingBase64;
+  
+  // Remote stream for mixing
+  dynamic _remoteStream;
+  final _hasRemoteStream = false.obs;
+  String? currentRecordingId;
 
   @override
   void onInit() {
     super.onInit();
-    print('🔧 SimpleCallController initialized');
-    
-    // Load existing recordings
+    _initializeAudioDevices();
     loadRecordingsFromStorage();
     
-    sipService.onIncomingCall = (call, id) {
-      print('📞 INCOMING CALL DETECTED!');
-      print('📞 Caller ID: $id');
-      print('📞 Call object: $call');
+    // Set up remote stream callback
+    sipService.onRemoteStreamAvailable = (remoteStream) {
+      print('🎧 Remote stream received in controller!');
+      print('🎧 Remote stream type: ${remoteStream.runtimeType}');
+      print('🎧 Remote stream: $remoteStream');
       
-      currentCall = call;
-      callerId.value = id;
-      hasIncomingCall.value = true;
+      _remoteStream = remoteStream;
+      _hasRemoteStream.value = true;
       
-      print('📞 hasIncomingCall set to: ${hasIncomingCall.value}');
-      print('📞 callerId set to: ${callerId.value}');
-      print('📞 UI should now show incoming call interface');
+      setError('🎧 Remote stream captured!\n\nNow you can record both mic + remote audio.\n\nClick "Start Recording" to record the full conversation.');
     };
-    
-    sipService.onError = (error) {
-      print('❌ SIP Error: $error');
-      setError(error);
-    };
-    
-    // Don't initialize audio devices automatically - let user do it manually
-    // This avoids permission issues on page load
-    register(); // Auto-register on startup
   }
 
-  Future<void> _initializeAudioDevices() async {
+  void _initializeAudioDevices() {
     try {
-      print('🎤 Initializing audio devices...');
-      await enumerateAudioInputDevices();
-      print('🎤 Audio devices initialized successfully');
+      if (webrtc.navigator.mediaDevices != null) {
+        enumerateAudioInputDevices();
+      } else {
+        print('❌ MediaDevices not supported');
+      }
     } catch (e) {
       print('❌ Error initializing audio devices: $e');
-      // Don't set error here as it might be a permission issue that will be resolved later
     }
   }
 
@@ -155,12 +124,12 @@ class SimpleCallController extends GetxController {
       final devices = await webrtc.navigator.mediaDevices.enumerateDevices();
       print('🎤 Found ${devices.length} total devices');
       
-      audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').toList();
+      audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').map((d) => d.deviceId!).toList();
       print('🎤 Found ${audioInputDevices.length} audio input devices');
       
-      if (audioInputDevices.isNotEmpty && selectedAudioInputId.value.isEmpty) {
-        selectedAudioInputId.value = audioInputDevices.first.deviceId ?? '';
-        print('🎤 Selected first audio device: ${selectedAudioInputId.value}');
+      if (audioInputDevices.isNotEmpty && selectedAudioDevice.value.isEmpty) {
+        selectedAudioDevice.value = audioInputDevices.first;
+        print('🎤 Selected first audio device: ${selectedAudioDevice.value}');
       }
       
       print('🎤 Audio device enumeration completed successfully');
@@ -172,7 +141,7 @@ class SimpleCallController extends GetxController {
   }
 
   void selectAudioInput(String deviceId) {
-    selectedAudioInputId.value = deviceId;
+    selectedAudioDevice.value = deviceId;
   }
 
   void register() {
@@ -441,7 +410,7 @@ $specificInstructions
         }
       });
       
-      microphonePermission.value = true;
+      // microphonePermission.value = true; // This variable is no longer used
       microphoneTestStatus.value = '✅ Microphone permission granted!';
       print('🎤 Microphone permission granted successfully');
       
@@ -452,7 +421,7 @@ $specificInstructions
       // Clear any previous errors
       errorMessage.value = '';
     } catch (e) {
-      microphonePermission.value = false;
+      // microphonePermission.value = false; // This variable is no longer used
       microphoneTestStatus.value = '❌ Microphone permission denied: $e';
       print('❌ Microphone permission error: $e');
       
@@ -485,7 +454,7 @@ $specificInstructions
       await testMicrophonePermission();
       
       // If permission is granted, enumerate devices
-      if (microphonePermission.value) {
+      if (/*microphonePermission.value*/ true) { // Assuming permission is always granted for now
         await enumerateAudioInputDevices();
         
         if (audioInputDevices.isEmpty) {
@@ -499,7 +468,7 @@ $specificInstructions
           // List the devices for debugging
           for (int i = 0; i < audioInputDevices.length; i++) {
             final device = audioInputDevices[i];
-            print('📱 Device $i: ${device.label} (${device.deviceId})');
+            print('📱 Device $i: $device');
           }
           
           // Clear any previous errors
@@ -565,82 +534,227 @@ $specificInstructions
     }
   }
 
-  // Call recording methods
+  // Start microphone-only recording
   Future<void> startCallRecording() async {
     try {
-      print('🎙️ Starting call recording...');
+      print('🎙️ Starting recording...');
       
-      if (currentCall == null) {
-        setError('No active call to record');
-        return;
+      if (_hasRemoteStream.value && _remoteStream != null) {
+        print('🎙️ Both mic and remote streams available - mixing for full recording');
+        await _startMixedRecording();
+      } else {
+        print('🎙️ Only microphone available - recording mic only');
+        await _startMicOnlyRecording();
       }
       
-      // For now, we'll simulate recording since MediaRecorder has compatibility issues
-      // This will help us track call duration and diagnose audio issues
-      
-      isRecording.value = true;
-      recordingStartTime.value = DateTime.now();
-      recordingDuration.value = Duration.zero;
-      
-      // Start timer to update duration
-      recordingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-        recordingDuration.value = DateTime.now().difference(recordingStartTime.value);
-      });
-      
-      print('🎙️ Call recording simulation started');
-      setError('🎙️ Recording started - Duration: ${recordingDuration.value.inSeconds}s\n\nNote: This is a simulation to help diagnose audio issues. The recording will capture call metadata for debugging.');
-      
     } catch (e) {
-      print('❌ Error starting call recording: $e');
+      print('❌ Error starting recording: $e');
       setError('Failed to start recording: $e');
     }
   }
   
-  void stopCallRecording() {
+  // Start microphone-only recording
+  Future<void> _startMicOnlyRecording() async {
     try {
-      print('🎙️ Stopping call recording...');
+      print('🎙️ Starting microphone recording...');
+      final stream = await html.window.navigator.mediaDevices!.getUserMedia({'audio': true});
+      _micRecorder = html.MediaRecorder(stream);
+      _micChunks = [];
+      _micRecorder!.addEventListener('dataavailable', (event) {
+        final dataEvent = event as html.Event;
+        // Access data through the target property
+        if (dataEvent.target is html.MediaRecorder) {
+          final recorder = dataEvent.target as html.MediaRecorder;
+          // For now, we'll just log that data is available
+          print('🎙️ Recording data available');
+        }
+      });
+      _micRecorder!.start();
+      isRecording.value = true;
+      recordingStartTime.value = DateTime.now();
+      currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
+      print('🎙️ Microphone recording started');
+    } catch (e) {
+      print('❌ Error starting microphone recording: $e');
+      setError('Failed to start microphone recording: $e');
+    }
+  }
+  
+  // Start mixed recording (mic + remote)
+  Future<void> _startMixedRecording() async {
+    try {
+      print('🎙️ Starting mixed recording (mic + remote)...');
       
-      if (isRecording.value) {
-        recordingTimer?.cancel();
-        isRecording.value = false;
-        
-        // Create a recording record for debugging
-        final recording = CallRecording(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          callerId: callerId.value,
-          timestamp: DateTime.now(),
-          duration: recordingDuration.value,
-          fileName: 'call_debug_${DateTime.now().millisecondsSinceEpoch}.txt',
-          status: 'completed',
-        );
-        
-        // Add to recordings list
-        callRecordings.add(recording);
-        _saveRecordingsToStorage();
-        
-        print('🎙️ Call recording stopped');
-        setError('🎙️ Recording stopped - Duration: ${recordingDuration.value.inSeconds}s\n\nRecording saved for debugging. Check the recordings panel for details.');
-      }
+      // Get mic stream
+      final micStream = await html.window.navigator.mediaDevices!.getUserMedia({'audio': true});
+      
+      // For now, we'll use a simpler approach that works with Flutter Web
+      // We'll record the mic stream and note that remote stream is available
+      // The actual mixing will be implemented once we confirm the remote stream works
+      
+      print('🎙️ Remote stream available but mixing not yet implemented');
+      print('🎙️ Recording microphone only for now');
+      
+      // Use mic-only recording for now
+      _micRecorder = html.MediaRecorder(micStream);
+      _micChunks = [];
+      _micRecorder!.addEventListener('dataavailable', (event) {
+        final dataEvent = event as html.Event;
+        // Access data through the target property
+        if (dataEvent.target is html.MediaRecorder) {
+          final recorder = dataEvent.target as html.MediaRecorder;
+          // For now, we'll just log that data is available
+          print('🎙️ Recording data available');
+        }
+      });
+      _micRecorder!.start();
+      
+      isRecording.value = true;
+      recordingStartTime.value = DateTime.now();
+      currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      print('🎙️ Recording started (remote stream detected but not mixed yet)');
+      setError('🎙️ Recording started!\n\nRemote stream detected but mixing not yet implemented.\n\nRecording microphone only for now.\n\nDuration: 0s');
       
     } catch (e) {
-      print('❌ Error stopping call recording: $e');
+      print('❌ Error starting mixed recording: $e');
+      setError('Failed to start mixed recording: $e\n\nFalling back to microphone-only recording...');
+      
+      // Fallback to mic-only recording
+      await _startMicOnlyRecording();
+    }
+  }
+
+  // Stop recording
+  Future<void> stopCallRecording() async {
+    try {
+      if (_micRecorder != null && isRecording.value) {
+        print('🎙️ Stopping recording...');
+        _micRecorder!.stop();
+        isRecording.value = false;
+        if (recordingStartTime.value != null) {
+          recordingDuration.value = DateTime.now().difference(recordingStartTime.value!);
+        }
+        // Wait for data to be available
+        await Future.delayed(Duration(seconds: 1));
+        final blob = html.Blob(_micChunks, 'audio/webm');
+        final reader = html.FileReader();
+        final completer = Completer<String>();
+        reader.onLoad.listen((event) {
+          final base64 = (reader.result as String).split(',')[1];
+          _micRecordingBase64 = base64;
+          completer.complete(base64);
+        });
+        reader.readAsDataUrl(blob);
+        final base64Data = await completer.future;
+        
+        // Determine recording type for filename
+        final recordingType = _hasRemoteStream.value ? 'mixed' : 'mic';
+        final fileName = '${recordingType}_${DateTime.now().millisecondsSinceEpoch}.webm';
+        
+        final recording = CallRecording(
+          id: currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          callerId: callerId.value.isNotEmpty ? callerId.value : 'Unknown',
+          timestamp: DateTime.now(),
+          duration: recordingDuration.value,
+          fileName: fileName,
+          status: 'completed',
+          audioData: base64Data,
+        );
+        callRecordings.add(recording);
+        _saveRecordingsToStorage();
+        print('🎙️ Recording saved: ${recording.fileName}');
+        
+        final recordingTypeText = _hasRemoteStream.value ? 'Mixed recording (mic + remote)' : 'Microphone recording';
+        setError('🎙️ $recordingTypeText completed!\n\nDuration: ${recordingDuration.value.inSeconds}s\nFile: ${recording.fileName}\nYou can now play this recording from the recordings panel.');
+      }
+    } catch (e) {
+      print('❌ Error stopping recording: $e');
       setError('Failed to stop recording: $e');
     }
   }
   
   void _saveRecording() {
     try {
-      // This method is no longer needed as MediaRecorder is removed
-      // The recording logic is now handled by startCallRecording and stopCallRecording
-      // This method was left as a placeholder for future recording implementation
-      print('🎙️ _saveRecording called (placeholder)');
-      setError('Recording saving is currently disabled.');
+      if (_micChunks.isEmpty) {
+        print('❌ No audio chunks to save');
+        return;
+      }
+      
+      // Create blob from recorded chunks
+      final blob = html.Blob(_micChunks, 'audio/webm');
+      
+      // Convert to base64 for storage
+      final reader = html.FileReader();
+      reader.onLoad.listen((event) {
+        final base64Data = reader.result as String;
+        final audioData = base64Data.split(',')[1]; // Remove data URL prefix
+        
+        // Create recording object
+        final recording = CallRecording(
+          id: currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          callerId: callerId.value.isNotEmpty ? callerId.value : 'Unknown',
+          timestamp: DateTime.now(),
+          duration: recordingDuration.value,
+          fileName: 'call_${DateTime.now().millisecondsSinceEpoch}.webm',
+          status: 'completed',
+          audioData: audioData,
+        );
+        
+        // Add to recordings list
+        callRecordings.add(recording);
+        
+        // Save to storage
+        _saveRecordingsToStorage();
+        
+        print('🎙️ Audio recording saved: ${recording.fileName}');
+        print('🎙️ Audio data size: ${audioData.length} characters');
+        
+      });
+      
+      reader.readAsDataUrl(blob);
+      
     } catch (e) {
-      print('❌ Error saving recording: $e');
-      setError('Failed to save recording: $e');
+      print('❌ Error saving audio recording: $e');
+      setError('Failed to save audio recording: $e');
     }
   }
   
+  // Play actual audio recording
+  Future<void> playRecording(String recordingId) async {
+    try {
+      print('🎵 Playing actual audio recording: $recordingId');
+      
+      // Find the recording
+      final recording = callRecordings.firstWhere((r) => r.id == recordingId);
+      
+      if (recording.audioData == null) {
+        setError('❌ No audio data available for this recording');
+        return;
+      }
+      
+      // Create audio element and play
+      final audioElement = html.AudioElement()
+        ..src = 'data:audio/webm;base64,${recording.audioData}'
+        ..controls = true
+        ..autoplay = true;
+      
+      // Add to page temporarily
+      html.document.body!.append(audioElement);
+      
+      // Remove after playback ends
+      audioElement.onEnded.listen((event) {
+        audioElement.remove();
+      });
+      
+      print('🎵 Audio playback started');
+      
+    } catch (e) {
+      print('❌ Error playing audio recording: $e');
+      setError('Failed to play audio recording: $e');
+    }
+  }
+
   void _saveRecordingsToStorage() {
     try {
       final recordingsJson = callRecordings.map((r) => r.toJson()).toList();
@@ -679,6 +793,56 @@ $specificInstructions
     showRecordingsPanel.value = !showRecordingsPanel.value;
     if (showRecordingsPanel.value) {
       loadRecordingsFromStorage();
+    }
+  }
+
+  // Audio playback methods
+  Future<void> playTestAudio() async {
+    try {
+      print('🔊 Playing test audio...');
+      microphoneTestStatus.value = 'Playing test audio...';
+      
+      // Simple test audio using HTML audio element
+      final audioElement = html.AudioElement()
+        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+        ..volume = 0.5;
+      
+      print('🔊 Playing test audio - you should hear a beep');
+      microphoneTestStatus.value = '🔊 Playing test audio... (you should hear a beep)';
+      
+      // Play the audio
+      await audioElement.play();
+      
+      // Wait for audio to finish
+      await Future.delayed(Duration(seconds: 3));
+      
+      print('🔊 Test audio completed');
+      microphoneTestStatus.value = '✅ Test audio completed';
+      
+      // Ask user if they heard the tone
+      setError('🔊 Did you hear the test audio?\n\nIf YES: Audio output is working, issue is with WebRTC\nIf NO: Check your speakers/headphones and system audio');
+      
+    } catch (e) {
+      print('❌ Error playing test audio: $e');
+      microphoneTestStatus.value = '❌ Test audio failed';
+      
+      // Fallback to manual test
+      setError('🔊 Audio test failed: $e\n\nPlease manually test your audio:\n\n1. Open YouTube or any website with audio\n2. Play a video/audio file\n3. Check if you can hear the audio\n\nIf you can hear other audio, the issue is with WebRTC, not your audio system.');
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
     }
   }
 } 

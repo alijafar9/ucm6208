@@ -6,6 +6,7 @@ class SipService extends SipUaHelperListener {
   final SIPUAHelper _helper = SIPUAHelper();
   Function(Call, String)? onIncomingCall;
   Function(String)? onError;
+  Function(dynamic)? onRemoteStreamAvailable; // New callback for remote stream
 
   SipService() {
     _helper.addSipUaHelperListener(this);
@@ -140,6 +141,11 @@ class SipService extends SipUaHelperListener {
       // Add event listeners to track audio stream
       _addCallEventListeners(call);
       
+      // Try to capture remote stream after a short delay
+      Future.delayed(Duration(seconds: 2), () {
+        _captureRemoteStream(call);
+      });
+      
     } catch (e) {
       print('❌ Error answering call with enhanced configuration: $e');
       
@@ -163,11 +169,74 @@ class SipService extends SipUaHelperListener {
         // Add event listeners to track audio stream
         _addCallEventListeners(call);
         
+        // Try to capture remote stream after a short delay
+        Future.delayed(Duration(seconds: 2), () {
+          _captureRemoteStream(call);
+        });
+        
       } catch (e2) {
         print('❌ Error with basic configuration: $e2');
         setError('Failed to answer call: $e2');
         rethrow;
       }
+    }
+  }
+
+  // Method to capture remote stream from the call
+  void _captureRemoteStream(Call call) {
+    try {
+      print('🎧 Attempting to capture remote stream...');
+      
+      // Try different ways to access the remote stream
+      print('🎧 Call object type: ${call.runtimeType}');
+      print('🎧 Call object: $call');
+      
+      // Method 1: Try to access any stream-related properties
+      try {
+        final callMap = call.toString();
+        print('🎧 Call object string: $callMap');
+        
+        // Look for any stream-related information
+        if (callMap.contains('stream') || callMap.contains('Stream')) {
+          print('🎧 Found stream-related properties in call object');
+        }
+        
+        // For now, we'll simulate a remote stream for testing
+        // In a real implementation, you would access the actual remote stream
+        print('🎧 Simulating remote stream capture for testing');
+        // onRemoteStreamAvailable?.call(simulatedRemoteStream);
+        
+      } catch (e) {
+        print('🎧 Error accessing call properties: $e');
+      }
+      
+      // Method 2: Try to access peerConnection
+      try {
+        final peerConnection = call.peerConnection;
+        print('🎧 Peer connection found: $peerConnection');
+        if (peerConnection != null) {
+          // Try to get remote streams from peer connection
+          final streams = peerConnection.getRemoteStreams();
+          print('🎧 Remote streams from peer connection: $streams');
+          if (streams.isNotEmpty) {
+            print('🎧 First remote stream from peer connection: ${streams.first}');
+            onRemoteStreamAvailable?.call(streams.first);
+            return;
+          }
+        }
+      } catch (e) {
+        print('🎧 No peerConnection property: $e');
+      }
+      
+      print('🎧 Could not capture remote stream - will try again later');
+      
+      // Try again after a longer delay
+      Future.delayed(Duration(seconds: 3), () {
+        _captureRemoteStream(call);
+      });
+      
+    } catch (e) {
+      print('❌ Error capturing remote stream: $e');
     }
   }
 

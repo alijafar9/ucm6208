@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/simple_call_controller.dart';
+import '../../models/call_log.dart';
 
 class RecordingsPanel extends StatelessWidget {
   final SimpleCallController controller;
@@ -252,16 +253,33 @@ class RecordingsPanel extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: () => controller.deleteRecording(recording.id),
-            icon: const Icon(Icons.delete, size: 18),
-            tooltip: 'Delete recording',
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.red[50],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => controller.playRecording(recording.id),
+                icon: const Icon(Icons.play_arrow, size: 18),
+                tooltip: 'Play recording',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.blue[50],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () => controller.deleteRecording(recording.id),
+                icon: const Icon(Icons.delete, size: 18),
+                tooltip: 'Delete recording',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red[50],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
