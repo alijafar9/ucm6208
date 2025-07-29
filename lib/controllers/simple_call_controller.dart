@@ -79,6 +79,12 @@ class SimpleCallController extends GetxController {
       currentCall = call;
       this.callerId.value = callerId;
       
+      // Debug logging
+      print('📞 isIncomingCall set to: ${isIncomingCall.value}');
+      print('📞 hasIncomingCall set to: ${hasIncomingCall.value}');
+      print('📞 callerId set to: ${this.callerId.value}');
+      print('📞 currentCall set to: $currentCall');
+      
       setError('📞 INCOMING CALL!\n\nCaller: $callerId\n\nClick "Answer" to accept or "Decline" to reject.');
     };
     
@@ -357,10 +363,18 @@ class SimpleCallController extends GetxController {
   // Method to manually test the incoming call interface
   void testIncomingCallInterface() {
     print('🧪 Testing incoming call interface manually');
-    callerId.value = 'Test Caller (900)';
+    
+    // Manually set the incoming call state
+    isIncomingCall.value = true;
     hasIncomingCall.value = true;
+    callerId.value = 'Test Caller (123)';
+    currentCall = 'test_call_object';
+    
+    print('🧪 isIncomingCall set to: ${isIncomingCall.value}');
     print('🧪 hasIncomingCall set to: ${hasIncomingCall.value}');
     print('🧪 callerId set to: ${callerId.value}');
+    
+    setError('🧪 TEST INCOMING CALL!\n\nCaller: Test Caller (123)\n\nThis is a test - you should see Answer/Decline buttons below.');
   }
 
   // Method to test audio output (speakers/headphones)
