@@ -5,6 +5,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import '../services/sip_service.dart';
 import '../models/call_log.dart';
 import 'dart:async'; // Added for Completer
+import 'package:flutter/material.dart'; // Added for AlertDialog
 
 class SimpleCallController extends GetxController {
   // Lazy-loaded SipService
@@ -85,7 +86,8 @@ class SimpleCallController extends GetxController {
       print('📞 callerId set to: ${this.callerId.value}');
       print('📞 currentCall set to: $currentCall');
       
-      setError('📞 INCOMING CALL!\n\nCaller: $callerId\n\nClick "Answer" to accept or "Decline" to reject.');
+      // Show incoming call dialog
+      _showIncomingCallDialog(callerId);
     };
     
     // Set up error callback for registration status
@@ -360,6 +362,132 @@ class SimpleCallController extends GetxController {
     }
   }
 
+  // Method to show incoming call dialog
+  void _showIncomingCallDialog(String callerId) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.phone_in_talk,
+                color: Colors.red[700],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Incoming Call',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.blue[100],
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.blue[700],
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          callerId,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const Text(
+                          'Incoming call...',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Get.back(); // Close dialog
+                      answerCall();
+                    },
+                    icon: const Icon(Icons.call, size: 20),
+                    label: const Text('Answer'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Get.back(); // Close dialog
+                      rejectCall();
+                    },
+                    icon: const Icon(Icons.call_end, size: 20),
+                    label: const Text('Decline'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false, // User must choose Answer or Decline
+    );
+  }
+
   // Method to manually test the incoming call interface
   void testIncomingCallInterface() {
     print('🧪 Testing incoming call interface manually');
@@ -374,7 +502,8 @@ class SimpleCallController extends GetxController {
     print('🧪 hasIncomingCall set to: ${hasIncomingCall.value}');
     print('🧪 callerId set to: ${callerId.value}');
     
-    setError('🧪 TEST INCOMING CALL!\n\nCaller: Test Caller (123)\n\nThis is a test - you should see Answer/Decline buttons below.');
+    // Show the incoming call dialog
+    _showIncomingCallDialog('Test Caller (123)');
   }
 
   // Method to test audio output (speakers/headphones)

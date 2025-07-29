@@ -226,83 +226,8 @@ class SimpleCallScreen extends StatelessWidget {
                           ),
                         )),
                         if (controller.hasIncomingCall.value)
-                          Container(
-                            margin: const EdgeInsets.only(top: 16),
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.red[50]!, Colors.red[100]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.red[300]!, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.red.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.phone_in_talk, color: Colors.red[700], size: 24),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'INCOMING CALL',
-                                      style: TextStyle(
-                                        color: Colors.red[700],
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                CallerIdText(callerId: controller.callerId.value),
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: controller.answerCall,
-                                        icon: const Icon(Icons.call, size: 20),
-                                        label: const Text('Answer'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: controller.rejectCall,
-                                        icon: const Icon(Icons.call_end, size: 20),
-                                        label: const Text('Decline'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )
+                          // Show incoming call dialog instead of inline interface
+                          _buildIncomingCallDialog(context)
                         else if (controller.inCall.value)
                           Column(
                             children: [
@@ -778,6 +703,56 @@ class SimpleCallScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIncomingCallDialog(BuildContext context) {
+    final controller = Get.find<SimpleCallController>();
+    return AlertDialog(
+      title: const Text('Incoming Call'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CallerIdText(callerId: controller.callerId.value),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: controller.answerCall,
+                  icon: const Icon(Icons.call, size: 20),
+                  label: const Text('Answer'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: controller.rejectCall,
+                  icon: const Icon(Icons.call_end, size: 20),
+                  label: const Text('Decline'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
