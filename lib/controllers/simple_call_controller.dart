@@ -67,6 +67,21 @@ class SimpleCallController extends GetxController {
       setError('🎧 Remote stream captured!\n\nNow you can record both mic + remote audio.\n\nClick "Start Recording" to record the full conversation.');
     };
     
+    // Set up incoming call callback
+    sipService.onIncomingCall = (call, callerId) {
+      print('📞 Incoming call received in controller!');
+      print('📞 Caller ID: $callerId');
+      print('📞 Call object: $call');
+      
+      // Update UI state for incoming call
+      isIncomingCall.value = true;
+      hasIncomingCall.value = true;
+      currentCall = call;
+      this.callerId.value = callerId;
+      
+      setError('📞 INCOMING CALL!\n\nCaller: $callerId\n\nClick "Answer" to accept or "Decline" to reject.');
+    };
+    
     // Set up error callback for registration status
     sipService.onError = (error) {
       print('📞 SIP service error: $error');
