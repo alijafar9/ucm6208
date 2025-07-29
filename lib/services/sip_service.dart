@@ -264,11 +264,14 @@ class SipService extends SipUaHelperListener {
   void makeCall(String target, {bool video = false}) {
     try {
       print('📞 Attempting to make call to: $target');
+      
+      // Simple call without complex state checking
       _helper.call(target, voiceOnly: !video);
       print('📞 Call initiated successfully');
     } catch (e) {
       print('❌ Error making call: $e');
       setError('Failed to make call: $e');
+      rethrow;
     }
   }
 

@@ -146,12 +146,27 @@ class SimpleCallController extends GetxController {
   }
 
   void register() {
-    sipService.register(
-      username: '003',
-      password: 'tr123',
-      domain: '172.16.26.2',
-      wsUri: 'ws://172.16.26.2:8088/ws',
-    );
+    try {
+      print('📞 Attempting to register with SIP server...');
+      isRegistered.value = false;
+      errorMessage.value = '';
+      
+      // Register with the SIP service using your UCM6208 settings
+      sipService.register(
+        username: '003',
+        password: 'tr123',
+        domain: '172.16.26.2',
+        wsUri: 'ws://172.16.26.2:8088/ws',
+        displayName: 'Flutter SIP Client',
+      );
+      
+      print('📞 Registration request sent');
+      setError('📞 Registering...\n\nPlease wait while connecting to the SIP server.\n\nYou should see "Registered" status when successful.');
+      
+    } catch (e) {
+      print('❌ Error during registration: $e');
+      setError('❌ Registration failed: $e\n\nPlease check:\n1. Your UCM6208 is running\n2. The SIP settings are correct\n3. Network connectivity');
+    }
   }
 
   void answerCall() {
@@ -202,12 +217,22 @@ class SimpleCallController extends GetxController {
   void makeOutgoingCall() {
     if (outgoingTarget.value.isNotEmpty) {
       try {
+        // Check if we're registered first
+        if (!isRegistered.value) {
+          setError('❌ Not registered!\n\nPlease register first by clicking the "Register" button.\n\nYou need to be connected to the SIP server before making calls.');
+          return;
+        }
+        
+        print('📞 Making outgoing call to: ${outgoingTarget.value}');
         sipService.makeCall(outgoingTarget.value);
         inCall.value = true;
         errorMessage.value = '';
       } catch (e) {
-        setError('Unable to start call: $e');
+        print('❌ Error making outgoing call: $e');
+        setError('❌ Failed to make call: $e\n\nPlease check:\n1. You are registered\n2. The target number is correct\n3. Your microphone permissions');
       }
+    } else {
+      setError('❌ Please enter a number to call');
     }
   }
 
