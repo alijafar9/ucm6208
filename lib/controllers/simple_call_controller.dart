@@ -93,6 +93,15 @@ class SimpleCallController extends GetxController {
     Future.delayed(Duration(seconds: 2), () {
       print('📞 Auto-registering with SIP server...');
       register();
+      
+      // Add timeout for registration
+      Future.delayed(Duration(seconds: 30), () {
+        if (isRegistering.value && !isRegistered.value) {
+          print('⏰ Registration timeout - resetting state');
+          isRegistering.value = false;
+          setError('⏰ Registration timeout!\n\nRegistration took too long and may have failed.\n\nPlease check:\n1. Your UCM6208 is running\n2. Network connectivity\n3. SIP settings\n\nYou can try manual registration by clicking "Register".');
+        }
+      });
     });
   }
 

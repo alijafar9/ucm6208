@@ -20,10 +20,11 @@ class SipService extends SipUaHelperListener {
     String? displayName,
   }) {
     try {
-      print('Starting SIP registration...');
-      print('Username: $username');
-      print('Domain: $domain');
-      print('WebSocket URL: $wsUri');
+      print('🚀 Starting SIP registration...');
+      print('📞 Username: $username');
+      print('📞 Domain: $domain');
+      print('📞 WebSocket URL: $wsUri');
+      print('📞 Display Name: $displayName');
       
       UaSettings settings = UaSettings();
       
@@ -67,11 +68,21 @@ class SipService extends SipUaHelperListener {
       // ICE gathering timeout
       settings.iceGatheringTimeout = 500;
       
-      print('Starting SIP helper with settings...');
+      print('🚀 Starting SIP helper with settings...');
+      print('🚀 Settings URI: ${settings.uri}');
+      print('🚀 Settings WebSocket URL: ${settings.webSocketUrl}');
+      print('🚀 Settings Register: ${settings.register}');
+      print('🚀 Settings Registrar Server: ${settings.registrarServer}');
+      
       _helper.start(settings);
-      print('SIP helper started successfully');
+      print('✅ SIP helper started successfully');
+      
+      // Notify that registration process has started
+      onError?.call('🔄 Registration process started...\n\nConnecting to SIP server...');
+      
     } catch (e) {
-      print('Error during SIP registration: $e');
+      print('❌ Error during SIP registration: $e');
+      onError?.call('❌ Registration failed to start: $e');
       rethrow;
     }
   }
@@ -322,11 +333,17 @@ class SipService extends SipUaHelperListener {
   @override
   void registrationStateChanged(RegistrationState state) {
     print('📞 Registration state changed: $state');
+    print('📞 Registration state type: ${state.runtimeType}');
+    print('📞 Registration state toString: "${state.toString()}"');
+    print('📞 Registration state hashCode: ${state.hashCode}');
+    
     // Just log the state as a string since we don't know the exact enum values
     print('📞 Registration state: $state');
     
     // Handle registration status
     final stateStr = state.toString().toLowerCase();
+    print('📞 State string (lowercase): "$stateStr"');
+    
     if (stateStr.contains('registered') || stateStr.contains('success')) {
       print('✅ Registration successful!');
       onError?.call('✅ Successfully registered with SIP server!\n\nYou can now make and receive calls.');
@@ -336,6 +353,9 @@ class SipService extends SipUaHelperListener {
     } else if (stateStr.contains('unregistered')) {
       print('📞 Registration ended: $state');
       onError?.call('📞 Registration ended: $state\n\nYou can register again by clicking the Register button.');
+    } else if (stateStr.contains('progress') || stateStr.contains('connecting')) {
+      print('🔄 Registration in progress: $state');
+      onError?.call('🔄 Registration in progress: $state\n\nPlease wait...');
     } else {
       print('📞 Registration status: $state');
       onError?.call('📞 Registration status: $state\n\nPlease wait...');

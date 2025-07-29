@@ -163,39 +163,65 @@ class SimpleCallScreen extends StatelessWidget {
                                       : Colors.red[200]!,
                             ),
                           ),
-                          child: Row(
+                          child: Column(
                             children: [
-                              Icon(
-                                controller.isRegistered.value 
-                                    ? Icons.check_circle 
-                                    : controller.isRegistering.value 
-                                        ? Icons.pending 
-                                        : Icons.error,
-                                color: controller.isRegistered.value 
-                                    ? Colors.green 
-                                    : controller.isRegistering.value 
-                                        ? Colors.orange 
-                                        : Colors.red,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  controller.isRegistered.value 
-                                      ? '✅ Registered with SIP Server'
-                                      : controller.isRegistering.value 
-                                          ? '🔄 Auto-registering...'
-                                          : '❌ Not Registered',
-                                  style: TextStyle(
-                                    color: controller.isRegistered.value 
-                                        ? Colors.green[800] 
+                              Row(
+                                children: [
+                                  Icon(
+                                    controller.isRegistered.value 
+                                        ? Icons.check_circle 
                                         : controller.isRegistering.value 
-                                            ? Colors.orange[800] 
-                                            : Colors.red[800],
-                                    fontWeight: FontWeight.w500,
+                                            ? Icons.pending 
+                                            : Icons.error,
+                                    color: controller.isRegistered.value 
+                                        ? Colors.green 
+                                        : controller.isRegistering.value 
+                                            ? Colors.orange 
+                                            : Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      controller.isRegistered.value 
+                                          ? '✅ Registered with SIP Server'
+                                          : controller.isRegistering.value 
+                                              ? '🔄 Auto-registering...'
+                                              : '❌ Not Registered',
+                                      style: TextStyle(
+                                        color: controller.isRegistered.value 
+                                            ? Colors.green[800] 
+                                            : controller.isRegistering.value 
+                                                ? Colors.orange[800] 
+                                                : Colors.red[800],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!controller.isRegistered.value && !controller.isRegistering.value)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        controller.register();
+                                      },
+                                      icon: const Icon(Icons.refresh, size: 18),
+                                      label: const Text('Manual Register'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         )),
