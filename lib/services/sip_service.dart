@@ -158,7 +158,7 @@ class SipService extends SipUaHelperListener {
       // Try with different WebRTC configurations
       final configurations = [
         {
-          'name': 'Custom G726 Filter',
+          'name': 'Browser Native G726 Filter',
           'options': <String, dynamic>{
             'mediaConstraints': {'audio': true, 'video': false},
             'pcConfig': {
@@ -171,7 +171,7 @@ class SipService extends SipUaHelperListener {
           },
         },
         {
-          'name': 'Plan B Legacy',
+          'name': 'Legacy Browser Support',
           'options': <String, dynamic>{
             'mediaConstraints': {'audio': true, 'video': false},
             'pcConfig': {
@@ -195,8 +195,8 @@ class SipService extends SipUaHelperListener {
           
           // For the first strategy, try a more aggressive approach
           if (i == 0) {
-            print('🔧 Using custom G726 filter approach...');
-            _answerWithCustomG726Handling(call, config['options'] as Map<String, dynamic>);
+            print('🔧 Using browser native G726 filter approach...');
+            _answerWithBrowserNativeG726Handling(call, config['options'] as Map<String, dynamic>);
           } else {
             call.answer(config['options'] as Map<String, dynamic>);
           }
@@ -216,15 +216,70 @@ class SipService extends SipUaHelperListener {
     }
   }
 
+  // Custom method to handle G726-32 with browser-native approach
+  void _answerWithBrowserNativeG726Handling(Call call, Map<String, dynamic> options) {
+    print('🔧 Browser native G726 handling with WebRTC configuration...');
+    
+    try {
+      // Create a modified options object with browser-specific G726 handling
+      final modifiedOptions = Map<String, dynamic>.from(options);
+      
+      // Add specific configurations for browser-native G726 handling
+      modifiedOptions['pcConfig'] = {
+        'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+        'iceTransportPolicy': 'all',
+        'bundlePolicy': 'max-bundle',
+        'rtcpMuxPolicy': 'require',
+        'sdpSemantics': 'unified-plan',
+      };
+      
+      // Add specific media constraints for better codec handling
+      modifiedOptions['mediaConstraints'] = {
+        'audio': {
+          'echoCancellation': true,
+          'noiseSuppression': true,
+          'autoGainControl': true,
+          'googEchoCancellation': true,
+          'googAutoGainControl': true,
+          'googNoiseSuppression': true,
+          'googHighpassFilter': true,
+          'googTypingNoiseDetection': true,
+          'googAudioMirroring': false,
+        },
+        'video': false,
+      };
+      
+      // Try to answer with the modified configuration
+      call.answer(modifiedOptions);
+    } catch (e) {
+      print('❌ Browser native G726 handling failed: $e');
+      print('🔧 Falling back to alternative WebRTC configs...');
+      _tryAlternativeWebRTCConfigs(call);
+    }
+  }
+
   // Method to try alternative WebRTC configurations
   void _tryAlternativeWebRTCConfigs(Call call) {
     print('🔧 Trying alternative WebRTC configurations...');
     
     final alternativeConfigs = [
       {
-        'name': 'Chrome Compatible',
+        'name': 'Chrome Enhanced',
         'options': <String, dynamic>{
-          'mediaConstraints': {'audio': true, 'video': false},
+          'mediaConstraints': {
+            'audio': {
+              'echoCancellation': true,
+              'noiseSuppression': true,
+              'autoGainControl': true,
+              'googEchoCancellation': true,
+              'googAutoGainControl': true,
+              'googNoiseSuppression': true,
+              'googHighpassFilter': true,
+              'googTypingNoiseDetection': true,
+              'googAudioMirroring': false,
+            },
+            'video': false,
+          },
           'pcConfig': {
             'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
             'iceTransportPolicy': 'all',
@@ -235,9 +290,16 @@ class SipService extends SipUaHelperListener {
         },
       },
       {
-        'name': 'Firefox Compatible',
+        'name': 'Firefox Enhanced',
         'options': <String, dynamic>{
-          'mediaConstraints': {'audio': true, 'video': false},
+          'mediaConstraints': {
+            'audio': {
+              'echoCancellation': true,
+              'noiseSuppression': true,
+              'autoGainControl': true,
+            },
+            'video': false,
+          },
           'pcConfig': {
             'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
             'sdpSemantics': 'plan-b',
@@ -245,9 +307,16 @@ class SipService extends SipUaHelperListener {
         },
       },
       {
-        'name': 'Safari Compatible',
+        'name': 'Safari Enhanced',
         'options': <String, dynamic>{
-          'mediaConstraints': {'audio': true, 'video': false},
+          'mediaConstraints': {
+            'audio': {
+              'echoCancellation': true,
+              'noiseSuppression': true,
+              'autoGainControl': true,
+            },
+            'video': false,
+          },
           'pcConfig': {
             'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
             'bundlePolicy': 'balanced',
@@ -270,42 +339,6 @@ class SipService extends SipUaHelperListener {
           rethrow;
         }
       }
-    }
-  }
-
-  // Custom method to handle G726-32 with specific WebRTC configuration
-  void _answerWithCustomG726Handling(Call call, Map<String, dynamic> options) {
-    print('🔧 Custom G726 handling with WebRTC configuration...');
-    
-    try {
-      // First try the custom G726 approach
-      final modifiedOptions = Map<String, dynamic>.from(options);
-      
-      // Add specific configurations for G726 handling
-      modifiedOptions['pcConfig'] = {
-        'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
-        'iceTransportPolicy': 'all',
-        'bundlePolicy': 'max-bundle',
-        'rtcpMuxPolicy': 'require',
-        'sdpSemantics': 'unified-plan',
-      };
-      
-      // Add specific media constraints
-      modifiedOptions['mediaConstraints'] = {
-        'audio': {
-          'echoCancellation': true,
-          'noiseSuppression': true,
-          'autoGainControl': true,
-        },
-        'video': false,
-      };
-      
-      // Try to answer with the modified configuration
-      call.answer(modifiedOptions);
-    } catch (e) {
-      print('❌ Custom G726 handling failed: $e');
-      print('🔧 Falling back to alternative WebRTC configs...');
-      _tryAlternativeWebRTCConfigs(call);
     }
   }
 
