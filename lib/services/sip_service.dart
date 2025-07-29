@@ -186,6 +186,10 @@ class SipService extends SipUaHelperListener {
             'mediaConstraints': {'audio': true, 'video': false},
           },
         },
+        {
+          'name': 'Basic Answer',
+          'options': <String, dynamic>{},
+        },
       ];
       
       for (int i = 0; i < configurations.length; i++) {
@@ -228,7 +232,7 @@ class SipService extends SipUaHelperListener {
       modifiedOptions['pcConfig'] = {
         'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
         'iceTransportPolicy': 'all',
-        'bundlePolicy': 'max-bundle',
+        'bundlePolicy': 'balanced', // Changed from 'max-bundle' to 'balanced'
         'rtcpMuxPolicy': 'require',
         'sdpSemantics': 'unified-plan',
       };
@@ -283,7 +287,7 @@ class SipService extends SipUaHelperListener {
           'pcConfig': {
             'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
             'iceTransportPolicy': 'all',
-            'bundlePolicy': 'max-bundle',
+            'bundlePolicy': 'balanced', // Changed from 'max-bundle' to 'balanced'
             'rtcpMuxPolicy': 'require',
             'sdpSemantics': 'unified-plan',
           },

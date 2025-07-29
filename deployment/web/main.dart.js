@@ -100276,7 +100276,7 @@ m=t.y
 l=t.m0
 k=t.K
 j=t.z
-s=A.b([A.v(["name","WebRTC Native G726 Filter","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],n,k)],n,j)],n,k),A.v(["name","Legacy Browser Support","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"sdpSemantics","plan-b"],n,k)],n,j)],n,k),A.v(["name","Minimal Config","options",A.v([h,A.v(["audio",!0,"video",!1],n,m)],n,j)],n,k)],t.Mq)
+s=A.b([A.v(["name","WebRTC Native G726 Filter","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],n,k)],n,j)],n,k),A.v(["name","Legacy Browser Support","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"sdpSemantics","plan-b"],n,k)],n,j)],n,k),A.v(["name","Minimal Config","options",A.v([h,A.v(["audio",!0,"video",!1],n,m)],n,j)],n,k),A.v(["name","Basic Answer","options",A.l(n,j)],n,k)],t.Mq)
 for(r=0,n=a.b,m=t.a;r<J.bq(s);++r){q=J.K(s,r)
 try{A.dM("\ud83d\udd27 Trying G726 fix "+A.h(r+1)+": "+A.h(J.K(q,"name")))
 if(J.d(r,0)){A.dM("\ud83d\udd27 Using WebRTC native G726 filter approach...")
@@ -100294,7 +100294,7 @@ A.aK("\ud83d\udd27 WebRTC native G726 handling with custom configuration...")
 try{q=t.N
 s=A.a7H(b,q,t.z)
 p=t.K
-J.cy(s,"pcConfig",A.v(["iceServers",A.b([A.v(["urls","stun:stun.l.google.com:19302"],q,q)],t.m0),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],q,p))
+J.cy(s,"pcConfig",A.v(["iceServers",A.b([A.v(["urls","stun:stun.l.google.com:19302"],q,q)],t.m0),"iceTransportPolicy","all","bundlePolicy","balanced","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],q,p))
 J.cy(s,"mediaConstraints",A.v(["audio",A.v(["echoCancellation",!0,"noiseSuppression",!0,"autoGainControl",!0,"googEchoCancellation",!0,"googAutoGainControl",!0,"googNoiseSuppression",!0,"googHighpassFilter",!0,"googTypingNoiseDetection",!0,"googAudioMirroring",!1],q,t.y),"video",!1],q,p))
 a.hl(s)}catch(o){r=A.a_(o)
 A.aK("\u274c WebRTC native G726 handling failed: "+A.h(r))
@@ -100307,7 +100307,7 @@ n=t.y
 m=t.K
 l=t.m0
 k=t.z
-s=A.b([A.v(["name","Chrome WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0,"googEchoCancellation",!0,"googAutoGainControl",!0,"googNoiseSuppression",!0,"googHighpassFilter",!0,"googTypingNoiseDetection",!0,"googAudioMirroring",!1],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],o,m)],o,k)],o,m),A.v(["name","Firefox WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"sdpSemantics","plan-b"],o,m)],o,k)],o,m),A.v(["name","Safari WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"bundlePolicy","balanced","rtcpMuxPolicy","require"],o,m)],o,k)],o,m)],t.Mq)
+s=A.b([A.v(["name","Chrome WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0,"googEchoCancellation",!0,"googAutoGainControl",!0,"googNoiseSuppression",!0,"googHighpassFilter",!0,"googTypingNoiseDetection",!0,"googAudioMirroring",!1],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"iceTransportPolicy","all","bundlePolicy","balanced","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],o,m)],o,k)],o,m),A.v(["name","Firefox WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"sdpSemantics","plan-b"],o,m)],o,k)],o,m),A.v(["name","Safari WebRTC Enhanced","options",A.v([i,A.v(["audio",A.v([h,!0,g,!0,"autoGainControl",!0],o,n),"video",!1],o,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",f],o,o)],l),"bundlePolicy","balanced","rtcpMuxPolicy","require"],o,m)],o,k)],o,m)],t.Mq)
 for(r=0,o=a.b,n=t.a;r<J.bq(s);++r){q=J.K(s,r)
 try{A.dM("\ud83d\udd27 Trying alternative config "+A.h(r+1)+": "+A.h(J.K(q,"name")))
 m=n.a(J.K(q,"options"))
