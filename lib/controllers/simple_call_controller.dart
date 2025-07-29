@@ -195,7 +195,7 @@ class SimpleCallController extends GetxController {
         username: '003',
         password: 'tr123',
         domain: '172.16.26.2',
-        wsUri: 'ws://172.16.26.2:8088/ws',
+        wsUri: 'wss://172.16.26.2:8089/wss',
         displayName: 'Flutter SIP Client',
       );
       

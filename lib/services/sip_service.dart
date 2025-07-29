@@ -337,26 +337,39 @@ class SipService extends SipUaHelperListener {
     print('📞 Registration state toString: "${state.toString()}"');
     print('📞 Registration state hashCode: ${state.hashCode}');
     
-    // Just log the state as a string since we don't know the exact enum values
-    print('📞 Registration state: $state');
-    
-    // Handle registration status
+    // Since the RegistrationState object doesn't expose code/cause/reason directly,
+    // we'll use a more sophisticated string analysis based on the logs we saw
     final stateStr = state.toString().toLowerCase();
     print('📞 State string (lowercase): "$stateStr"');
     
-    if (stateStr.contains('registered') || stateStr.contains('success')) {
+    // Based on the logs, we can see that successful registration shows:
+    // "registered => Code: [200], Cause: registered, Reason: OK"
+    // So we'll look for these patterns in the state string
+    
+    if (stateStr.contains('200') || 
+        (stateStr.contains('registered') && stateStr.contains('ok')) ||
+        stateStr.contains('success')) {
       print('✅ Registration successful!');
       onError?.call('✅ Successfully registered with SIP server!\n\nYou can now make and receive calls.');
-    } else if (stateStr.contains('failed') || stateStr.contains('error') || stateStr.contains('timeout')) {
+    } else if (stateStr.contains('401') || 
+               stateStr.contains('403') || 
+               stateStr.contains('404') || 
+               stateStr.contains('500') ||
+               stateStr.contains('failed') || 
+               stateStr.contains('error') || 
+               stateStr.contains('timeout')) {
       print('❌ Registration failed: $state');
       onError?.call('❌ Registration failed: $state\n\nPlease check your UCM6208 settings and network connection.');
     } else if (stateStr.contains('unregistered')) {
       print('📞 Registration ended: $state');
       onError?.call('📞 Registration ended: $state\n\nYou can register again by clicking the Register button.');
-    } else if (stateStr.contains('progress') || stateStr.contains('connecting')) {
+    } else if (stateStr.contains('progress') || 
+               stateStr.contains('connecting') ||
+               stateStr.contains('connecting')) {
       print('🔄 Registration in progress: $state');
       onError?.call('🔄 Registration in progress: $state\n\nPlease wait...');
     } else {
+      // For unknown states, let's be more specific about what we see
       print('📞 Registration status: $state');
       onError?.call('📞 Registration status: $state\n\nPlease wait...');
     }
