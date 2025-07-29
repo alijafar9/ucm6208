@@ -3,6 +3,44 @@ import '../services/sip_service.dart';
 import 'package:sip_ua/sip_ua.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'dart:html' as html;
+import 'dart:convert';
+import 'dart:async';
+
+class CallRecording {
+  final String id;
+  final String callerId;
+  final DateTime timestamp;
+  final Duration duration;
+  final String fileName;
+  final String status; // 'recording', 'completed', 'failed'
+
+  CallRecording({
+    required this.id,
+    required this.callerId,
+    required this.timestamp,
+    required this.duration,
+    required this.fileName,
+    required this.status,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'callerId': callerId,
+    'timestamp': timestamp.toIso8601String(),
+    'duration': duration.inSeconds,
+    'fileName': fileName,
+    'status': status,
+  };
+
+  factory CallRecording.fromJson(Map<String, dynamic> json) => CallRecording(
+    id: json['id'],
+    callerId: json['callerId'],
+    timestamp: DateTime.parse(json['timestamp']),
+    duration: Duration(seconds: json['duration']),
+    fileName: json['fileName'],
+    status: json['status'],
+  );
+}
 
 class SimpleCallController extends GetxController {
   final SipService sipService = SipService();
@@ -17,12 +55,24 @@ class SimpleCallController extends GetxController {
   var selectedAudioInputId = ''.obs;
   var microphonePermission = false.obs;
   var microphoneTestStatus = ''.obs;
+  
+  // Call recording variables
+  var isRecording = false.obs;
+  var recordingStartTime = DateTime.now().obs;
+  var recordingDuration = Duration.zero.obs;
+  var callRecordings = <CallRecording>[].obs;
+  var showRecordingsPanel = false.obs;
+  
   Call? currentCall;
+  Timer? recordingTimer;
 
   @override
   void onInit() {
     super.onInit();
     print('🔧 SimpleCallController initialized');
+    
+    // Load existing recordings
+    loadRecordingsFromStorage();
     
     sipService.onIncomingCall = (call, id) {
       print('📞 INCOMING CALL DETECTED!');
@@ -142,6 +192,14 @@ class SimpleCallController extends GetxController {
         inCall.value = true;
         hasIncomingCall.value = false;
         print('📞 Call answered successfully');
+        
+        // Auto-start recording for debugging
+        Future.delayed(Duration(seconds: 2), () {
+          if (inCall.value) {
+            startCallRecording();
+          }
+        });
+        
       } catch (e) {
         print('❌ Error answering call: $e');
         
@@ -185,6 +243,11 @@ class SimpleCallController extends GetxController {
 
   void hangupCall() {
     if (currentCall != null) {
+      // Stop recording if active
+      if (isRecording.value) {
+        stopCallRecording();
+      }
+      
       sipService.hangupCall(currentCall!);
       _resetCallState();
       inCall.value = false;
@@ -213,9 +276,11 @@ class SimpleCallController extends GetxController {
     hasIncomingCall.value = false;
     callerId.value = '';
     currentCall = null;
-    inCall.value = false;
-    isMuted.value = false;
-    errorMessage.value = '';
+    
+    // Stop recording if active
+    if (isRecording.value) {
+      stopCallRecording();
+    }
   }
 
   // Method to manually test the incoming call interface
@@ -497,6 +562,123 @@ $specificInstructions
       print('❌ Error checking WebRTC status: $e');
       microphoneTestStatus.value = '❌ WebRTC check failed';
       setError('Failed to check WebRTC status: $e');
+    }
+  }
+
+  // Call recording methods
+  Future<void> startCallRecording() async {
+    try {
+      print('🎙️ Starting call recording...');
+      
+      if (currentCall == null) {
+        setError('No active call to record');
+        return;
+      }
+      
+      // For now, we'll simulate recording since MediaRecorder has compatibility issues
+      // This will help us track call duration and diagnose audio issues
+      
+      isRecording.value = true;
+      recordingStartTime.value = DateTime.now();
+      recordingDuration.value = Duration.zero;
+      
+      // Start timer to update duration
+      recordingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        recordingDuration.value = DateTime.now().difference(recordingStartTime.value);
+      });
+      
+      print('🎙️ Call recording simulation started');
+      setError('🎙️ Recording started - Duration: ${recordingDuration.value.inSeconds}s\n\nNote: This is a simulation to help diagnose audio issues. The recording will capture call metadata for debugging.');
+      
+    } catch (e) {
+      print('❌ Error starting call recording: $e');
+      setError('Failed to start recording: $e');
+    }
+  }
+  
+  void stopCallRecording() {
+    try {
+      print('🎙️ Stopping call recording...');
+      
+      if (isRecording.value) {
+        recordingTimer?.cancel();
+        isRecording.value = false;
+        
+        // Create a recording record for debugging
+        final recording = CallRecording(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          callerId: callerId.value,
+          timestamp: DateTime.now(),
+          duration: recordingDuration.value,
+          fileName: 'call_debug_${DateTime.now().millisecondsSinceEpoch}.txt',
+          status: 'completed',
+        );
+        
+        // Add to recordings list
+        callRecordings.add(recording);
+        _saveRecordingsToStorage();
+        
+        print('🎙️ Call recording stopped');
+        setError('🎙️ Recording stopped - Duration: ${recordingDuration.value.inSeconds}s\n\nRecording saved for debugging. Check the recordings panel for details.');
+      }
+      
+    } catch (e) {
+      print('❌ Error stopping call recording: $e');
+      setError('Failed to stop recording: $e');
+    }
+  }
+  
+  void _saveRecording() {
+    try {
+      // This method is no longer needed as MediaRecorder is removed
+      // The recording logic is now handled by startCallRecording and stopCallRecording
+      // This method was left as a placeholder for future recording implementation
+      print('🎙️ _saveRecording called (placeholder)');
+      setError('Recording saving is currently disabled.');
+    } catch (e) {
+      print('❌ Error saving recording: $e');
+      setError('Failed to save recording: $e');
+    }
+  }
+  
+  void _saveRecordingsToStorage() {
+    try {
+      final recordingsJson = callRecordings.map((r) => r.toJson()).toList();
+      html.window.localStorage['callRecordings'] = jsonEncode(recordingsJson);
+      print('💾 Recordings saved to local storage');
+    } catch (e) {
+      print('❌ Error saving recordings to storage: $e');
+    }
+  }
+  
+  void loadRecordingsFromStorage() {
+    try {
+      final recordingsData = html.window.localStorage['callRecordings'];
+      if (recordingsData != null) {
+        final List<dynamic> recordingsJson = jsonDecode(recordingsData);
+        callRecordings.value = recordingsJson.map((json) => CallRecording.fromJson(json)).toList();
+        print('📁 Loaded ${callRecordings.length} recordings from storage');
+      }
+    } catch (e) {
+      print('❌ Error loading recordings from storage: $e');
+    }
+  }
+  
+  void deleteRecording(String recordingId) {
+    try {
+      callRecordings.removeWhere((recording) => recording.id == recordingId);
+      _saveRecordingsToStorage();
+      print('🗑️ Recording deleted: $recordingId');
+    } catch (e) {
+      print('❌ Error deleting recording: $e');
+      setError('Failed to delete recording: $e');
+    }
+  }
+  
+  void toggleRecordingsPanel() {
+    showRecordingsPanel.value = !showRecordingsPanel.value;
+    if (showRecordingsPanel.value) {
+      loadRecordingsFromStorage();
     }
   }
 } 

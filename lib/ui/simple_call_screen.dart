@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/simple_call_controller.dart';
 import 'widgets/caller_id_text.dart';
 import 'widgets/status_text.dart';
+import 'widgets/recordings_panel.dart';
 
 class SimpleCallScreen extends StatelessWidget {
   const SimpleCallScreen({super.key});
@@ -205,6 +206,44 @@ class SimpleCallScreen extends StatelessWidget {
                   children: [
                     StatusText(status: 'In call'),
                     const SizedBox(height: 16),
+                    
+                    // Recording status
+                    Obx(() => controller.isRecording.value
+                      ? Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.red[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red[300]!),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.fiber_manual_record, color: Colors.red, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Recording: ${controller.recordingDuration.value.inSeconds}s',
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: controller.stopCallRecording,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                ),
+                                child: const Text('Stop'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink()),
+                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -220,6 +259,15 @@ class SimpleCallScreen extends StatelessWidget {
                           onPressed: controller.isMuted.value ? controller.unmuteCall : controller.muteCall,
                           child: Text(controller.isMuted.value ? 'Unmute' : 'Mute'),
                         ),
+                        const SizedBox(width: 16),
+                        Obx(() => ElevatedButton(
+                          onPressed: controller.isRecording.value ? controller.stopCallRecording : controller.startCallRecording,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: controller.isRecording.value ? Colors.red : Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text(controller.isRecording.value ? 'Stop Recording' : 'Start Recording'),
+                        )),
                       ],
                     ),
                   ],
@@ -440,11 +488,24 @@ class SimpleCallScreen extends StatelessWidget {
                           ),
                           child: const Text('🔍 Check WebRTC'),
                         ),
+                        ElevatedButton(
+                          onPressed: controller.toggleRecordingsPanel,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[600],
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('🎙️ Recordings'),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
+              
+              // Recordings Panel
+              Obx(() => controller.showRecordingsPanel.value
+                ? RecordingsPanel(controller: controller)
+                : const SizedBox.shrink()),
               
               const SizedBox(height: 40),
             ],
