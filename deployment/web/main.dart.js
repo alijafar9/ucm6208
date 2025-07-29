@@ -100252,7 +100252,7 @@ n=t.N
 m=t.y
 l=t.K
 k=t.z
-s=A.b([A.v(["name","SDP Filtered Answer","options",A.v([i,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls","stun:stun.l.google.com:19302"],n,n)],t.m0),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require"],n,l)],n,k)],n,l),A.v(["name","Minimal Answer","options",A.v([i,A.v(["audio",!0,"video",!1],n,m)],n,k)],n,l),A.v(["name","Basic Answer","options",A.l(n,k)],n,l)],t.Mq)
+s=A.b([A.v(["name","SDP Filtered Answer","options",A.v([i,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls","stun:stun.l.google.com:19302"],n,n)],t.m0),"iceTransportPolicy","all","bundlePolicy","balanced","rtcpMuxPolicy","require"],n,l)],n,k)],n,l),A.v(["name","Minimal Answer","options",A.v([i,A.v(["audio",!0,"video",!1],n,m)],n,k)],n,l),A.v(["name","Basic Answer","options",A.l(n,k)],n,l)],t.Mq)
 for(r=0,n=a.b,m=t.a;r<J.bq(s);++r){q=J.K(s,r)
 try{A.dM("\ud83d\udcde Trying strategy "+A.h(r+1)+": "+A.h(J.K(q,"name")))
 if(J.d(r,0)){A.dM("\ud83d\udcde Attempting SDP manipulation for strategy 1...")
@@ -100276,7 +100276,7 @@ m=t.y
 l=t.m0
 k=t.K
 j=t.z
-s=A.b([A.v(["name","WebRTC Native G726 Filter","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"iceTransportPolicy","all","bundlePolicy","max-bundle","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],n,k)],n,j)],n,k),A.v(["name","Legacy Browser Support","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"sdpSemantics","plan-b"],n,k)],n,j)],n,k),A.v(["name","Minimal Config","options",A.v([h,A.v(["audio",!0,"video",!1],n,m)],n,j)],n,k),A.v(["name","Basic Answer","options",A.l(n,j)],n,k)],t.Mq)
+s=A.b([A.v(["name","WebRTC Native G726 Filter","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"iceTransportPolicy","all","bundlePolicy","balanced","rtcpMuxPolicy","require","sdpSemantics","unified-plan"],n,k)],n,j)],n,k),A.v(["name","Legacy Browser Support","options",A.v([h,A.v(["audio",!0,"video",!1],n,m),"pcConfig",A.v(["iceServers",A.b([A.v(["urls",g],n,n)],l),"sdpSemantics","plan-b"],n,k)],n,j)],n,k),A.v(["name","Minimal Config","options",A.v([h,A.v(["audio",!0,"video",!1],n,m)],n,j)],n,k),A.v(["name","Basic Answer","options",A.l(n,j)],n,k)],t.Mq)
 for(r=0,n=a.b,m=t.a;r<J.bq(s);++r){q=J.K(s,r)
 try{A.dM("\ud83d\udd27 Trying G726 fix "+A.h(r+1)+": "+A.h(J.K(q,"name")))
 if(J.d(r,0)){A.dM("\ud83d\udd27 Using WebRTC native G726 filter approach...")
@@ -100324,7 +100324,7 @@ try{this.a8x(a)}catch(q){s=A.a_(q)
 A.aK("\u274c G726 fix failed, trying standard approach: "+A.h(s))
 r=A.a7H(b,t.N,t.z)
 J.cy(r,"sdpSemantics","unified-plan")
-J.cy(r,"bundlePolicy","max-bundle")
+J.cy(r,"bundlePolicy","balanced")
 J.cy(r,"rtcpMuxPolicy","require")
 a.hl(r)}},
 atp(a){var s,r

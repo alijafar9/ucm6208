@@ -93,18 +93,18 @@ class SipService extends SipUaHelperListener {
     
     // Try different answer strategies with SDP manipulation
     final strategies = [
-      {
-        'name': 'SDP Filtered Answer',
-        'options': <String, dynamic>{
-          'mediaConstraints': {'audio': true, 'video': false},
-          'pcConfig': {
-            'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
-            'iceTransportPolicy': 'all',
-            'bundlePolicy': 'max-bundle',
-            'rtcpMuxPolicy': 'require',
+              {
+          'name': 'SDP Filtered Answer',
+          'options': <String, dynamic>{
+            'mediaConstraints': {'audio': true, 'video': false},
+            'pcConfig': {
+              'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
+              'iceTransportPolicy': 'all',
+              'bundlePolicy': 'balanced',
+              'rtcpMuxPolicy': 'require',
+            },
           },
         },
-      },
       {
         'name': 'Minimal Answer',
         'options': <String, dynamic>{
@@ -164,7 +164,7 @@ class SipService extends SipUaHelperListener {
             'pcConfig': {
               'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}],
               'iceTransportPolicy': 'all',
-              'bundlePolicy': 'max-bundle',
+              'bundlePolicy': 'balanced',
               'rtcpMuxPolicy': 'require',
               'sdpSemantics': 'unified-plan',
             },
@@ -361,7 +361,7 @@ class SipService extends SipUaHelperListener {
       
       // Add custom SDP handling
       modifiedOptions['sdpSemantics'] = 'unified-plan';
-      modifiedOptions['bundlePolicy'] = 'max-bundle';
+              modifiedOptions['bundlePolicy'] = 'balanced';
       modifiedOptions['rtcpMuxPolicy'] = 'require';
       
       // Try to answer with modified options
@@ -397,7 +397,7 @@ class SipService extends SipUaHelperListener {
             {'urls': 'stun:stun.l.google.com:19302'},
           ],
           'iceTransportPolicy': 'all',
-          'bundlePolicy': 'max-bundle',
+                      'bundlePolicy': 'balanced',
           'rtcpMuxPolicy': 'require',
         },
       };
