@@ -13,6 +13,45 @@ class SipService extends SipUaHelperListener {
     _helper.addSipUaHelperListener(this);
   }
 
+  // Method to test WebSocket connectivity
+  void testWebSocketConnectivity(String wsUrl) {
+    try {
+      print('🔍 Testing WebSocket connectivity to: $wsUrl');
+      
+      // Create a simple WebSocket connection test
+      final ws = html.WebSocket(wsUrl);
+      
+      ws.onOpen.listen((event) {
+        print('✅ WebSocket connection successful to: $wsUrl');
+        onError?.call('✅ WebSocket connection successful!\n\nProceeding with SIP registration...');
+        ws.close();
+      });
+      
+      ws.onError.listen((event) {
+        print('❌ WebSocket connection failed to: $wsUrl');
+        print('❌ WebSocket error: $event');
+        onError?.call('❌ WebSocket connection failed!\n\nPlease check:\n1. UCM6208 WebSocket server is running on port 8088\n2. Network connectivity to 172.16.26.2\n3. Firewall settings\n\nError: $event');
+      });
+      
+      ws.onClose.listen((event) {
+        print('📞 WebSocket connection closed: $event');
+      });
+      
+      // Set a timeout for the test
+      Future.delayed(Duration(seconds: 5), () {
+        if (ws.readyState == html.WebSocket.CONNECTING) {
+          print('⏰ WebSocket connection timeout');
+          ws.close();
+          onError?.call('⏰ WebSocket connection timeout!\n\nPlease check if the UCM6208 WebSocket server is running on port 8088.');
+        }
+      });
+      
+    } catch (e) {
+      print('❌ Error testing WebSocket connectivity: $e');
+      onError?.call('❌ Error testing WebSocket connectivity: $e');
+    }
+  }
+
   void register({
     required String username,
     required String password,
@@ -27,6 +66,25 @@ class SipService extends SipUaHelperListener {
       print('📞 WebSocket URL: $wsUri');
       print('📞 Display Name: $displayName');
       
+      // Test WebSocket connectivity first
+      if (wsUri != null) {
+        testWebSocketConnectivity(wsUri);
+        // Wait a bit before proceeding with SIP registration
+        Future.delayed(Duration(seconds: 2), () {
+          _performSipRegistration(username, password, domain, wsUri, displayName);
+        });
+      } else {
+        _performSipRegistration(username, password, domain, wsUri, displayName);
+      }
+      
+    } catch (e) {
+      print('❌ Error starting SIP registration: $e');
+      onError?.call('❌ Failed to start SIP registration: $e');
+    }
+  }
+
+  void _performSipRegistration(String username, String password, String domain, String? wsUri, String? displayName) {
+    try {
       // Create SIP URI
       final sipUri = 'sip:$username@$domain';
       
@@ -37,11 +95,36 @@ class SipService extends SipUaHelperListener {
         // WebSocket transport
         settings.uri = sipUri;
         settings.webSocketUrl = wsUri;
+        settings.webSocketSettings.extraHeaders = {};
+        settings.webSocketSettings.allowBadCertificate = true;
+        settings.transportType = TransportType.WS;
         settings.authorizationUser = username;
         settings.password = password;
         settings.displayName = displayName ?? 'Flutter SIP Client';
         settings.register = true;
         settings.registrarServer = 'sip:$domain';
+        
+        // ICE settings for WebRTC
+        settings.iceServers = [
+          {'urls': 'stun:stun.l.google.com:19302'},
+          {'urls': 'stun:stun1.l.google.com:19302'},
+        ];
+        settings.iceTransportPolicy = IceTransportPolicy.ALL;
+        
+        // Session timers
+        settings.sessionTimers = true;
+        settings.sessionTimersRefreshMethod = SipMethod.UPDATE;
+        
+        // Connection recovery
+        settings.connectionRecoveryMaxInterval = 30;
+        settings.connectionRecoveryMinInterval = 2;
+        
+        // ICE gathering timeout
+        settings.iceGatheringTimeout = 500;
+        
+        // DTMF mode
+        settings.dtmfMode = DtmfMode.RFC2833;
+        
       } else {
         // TCP/UDP transport (not supported in web)
         settings.uri = sipUri;
@@ -56,6 +139,8 @@ class SipService extends SipUaHelperListener {
       print('🚀 Settings URI: ${settings.uri}');
       print('🚀 Settings Register: ${settings.register}');
       print('🚀 Settings Registrar Server: ${settings.registrarServer}');
+      print('🚀 Settings WebSocket URL: ${settings.webSocketUrl}');
+      print('🚀 Settings Transport Type: ${settings.transportType}');
       
       _helper.start(settings);
       print('✅ SIP helper started successfully');
