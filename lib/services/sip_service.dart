@@ -127,7 +127,7 @@ class SipService extends SipUaHelperListener {
           // Force specific audio constraints for better compatibility
           'sampleRate': 8000,
           'channelCount': 1,
-          'volume': 1.0,
+          'volume': 100.0,
         },
         'video': false,
       },
