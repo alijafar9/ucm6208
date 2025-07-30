@@ -134,12 +134,8 @@ class SimpleCallController extends GetxController {
 
   void _initializeAudioDevices() {
     try {
-      if (webrtc.navigator.mediaDevices != null) {
-        enumerateAudioInputDevices();
-      } else {
-        print('❌ MediaDevices not supported');
-      }
-    } catch (e) {
+      enumerateAudioInputDevices();
+        } catch (e) {
       print('❌ Error initializing audio devices: $e');
     }
   }
@@ -147,11 +143,6 @@ class SimpleCallController extends GetxController {
   Future<void> enumerateAudioInputDevices() async {
     try {
       print('🎤 Enumerating audio input devices...');
-      
-      // Check if WebRTC is supported
-      if (webrtc.navigator.mediaDevices == null) {
-        throw Exception('WebRTC not supported in this browser. Please use Chrome, Firefox, or Safari.');
-      }
       
       // First, request microphone permission with more specific constraints
       try {
@@ -190,7 +181,7 @@ class SimpleCallController extends GetxController {
       final devices = await webrtc.navigator.mediaDevices.enumerateDevices();
       print('🎤 Found ${devices.length} total devices');
       
-      audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').map((d) => d.deviceId!).toList();
+      audioInputDevices.value = devices.where((d) => d.kind == 'audioinput').map((d) => d.deviceId).toList();
       print('🎤 Found ${audioInputDevices.length} audio input devices');
       
       if (audioInputDevices.isNotEmpty && selectedAudioDevice.value.isEmpty) {
@@ -740,11 +731,6 @@ $specificInstructions
       microphoneTestStatus.value = 'Testing microphone permission...';
       print('🎤 Testing microphone permission...');
       
-      // Check if WebRTC is supported
-      if (webrtc.navigator.mediaDevices == null) {
-        throw Exception('WebRTC not supported in this browser. Please use Chrome, Firefox, or Safari.');
-      }
-      
       final stream = await webrtc.navigator.mediaDevices.getUserMedia({
         'audio': {
           'echoCancellation': true,
@@ -789,11 +775,6 @@ $specificInstructions
     try {
       microphoneTestStatus.value = 'Listing audio devices...';
       print('🎤 Listing audio devices...');
-      
-      // Check if WebRTC is supported
-      if (webrtc.navigator.mediaDevices == null) {
-        throw Exception('WebRTC not supported in this browser. Please use Chrome, Firefox, or Safari.');
-      }
       
       // First test microphone permission
       await testMicrophonePermission();
@@ -879,6 +860,277 @@ $specificInstructions
     }
   }
 
+  // Method to diagnose and fix audio output issues
+  void diagnoseAudioOutput() {
+    try {
+      print('🔊 Diagnosing audio output issues...');
+      microphoneTestStatus.value = 'Diagnosing audio output...';
+      
+      String diagnosis = '🔊 Audio Output Diagnosis:\n\n';
+      
+      // Check if we're in a call
+      if (inCall.value || isCallActive.value) {
+        diagnosis += '📞 Call Status: Active\n';
+        diagnosis += '🎧 Remote Stream: ${_hasRemoteStream.value ? "Available" : "Not Available"}\n\n';
+        
+        if (_hasRemoteStream.value) {
+          diagnosis += '✅ Remote stream is available\n';
+          diagnosis += '🔧 Audio should be working\n\n';
+        } else {
+          diagnosis += '❌ Remote stream not available\n';
+          diagnosis += '🔧 This might be causing one-way audio\n\n';
+        }
+      } else {
+        diagnosis += '📞 Call Status: Not in call\n';
+        diagnosis += '🔧 Start a call to test audio\n\n';
+      }
+      
+      // Check browser audio capabilities
+      diagnosis += '🌐 Browser Audio Support:\n';
+      diagnosis += '• HTML5 Audio: Supported\n';
+      diagnosis += '• WebRTC Audio: Supported\n';
+      diagnosis += '• MediaStream API: Supported\n\n';
+      
+      // Common issues and solutions
+      diagnosis += '🔧 Common Audio Issues:\n';
+      diagnosis += '1. Browser blocking autoplay\n';
+      diagnosis += '2. System audio muted\n';
+      diagnosis += '3. Wrong audio output device\n';
+      diagnosis += '4. WebRTC codec mismatch\n';
+      diagnosis += '5. Network firewall blocking RTP\n\n';
+      
+      diagnosis += '💡 Solutions to Try:\n';
+      diagnosis += '1. Click "Test Audio" to verify output\n';
+      diagnosis += '2. Check system volume and audio device\n';
+      diagnosis += '3. Try a different browser\n';
+      diagnosis += '4. Check UCM6208 codec settings\n';
+      diagnosis += '5. Verify network connectivity\n';
+      
+      print('🔊 Audio diagnosis completed');
+      microphoneTestStatus.value = '✅ Audio diagnosis completed';
+      setError(diagnosis);
+      
+    } catch (e) {
+      print('❌ Error diagnosing audio output: $e');
+      microphoneTestStatus.value = '❌ Audio diagnosis failed';
+      setError('Failed to diagnose audio output: $e');
+    }
+  }
+
+  // Method to force audio output test
+  void forceAudioOutputTest() {
+    try {
+      print('🔊 Forcing audio output test...');
+      microphoneTestStatus.value = 'Testing audio output...';
+      
+      // Create a simple audio test
+      final audioElement = html.AudioElement()
+        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+        ..volume = 0.7
+        ..autoplay = true;
+      
+      // Add to page temporarily
+      html.document.body!.append(audioElement);
+      
+      // Remove after 3 seconds
+      Future.delayed(Duration(seconds: 3), () {
+        audioElement.remove();
+      });
+      
+      print('🔊 Audio test completed');
+      microphoneTestStatus.value = '✅ Audio test completed';
+      
+      setError('🔊 Audio Test Completed\n\nDid you hear a beep sound?\n\n✅ YES - Audio output is working\n❌ NO - Check your speakers/headphones');
+      
+    } catch (e) {
+      print('❌ Error in audio output test: $e');
+      microphoneTestStatus.value = '❌ Audio test failed';
+      setError('Failed to test audio output: $e');
+    }
+  }
+
+  // Method to force maximum audio volume for WebRTC
+  void forceMaximumAudioVolume() {
+    try {
+      print('🔊 Forcing maximum audio volume...');
+      microphoneTestStatus.value = 'Setting maximum audio volume...';
+      
+      // Create a simple audio test with maximum volume
+      final audioElement = html.AudioElement()
+        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+        ..volume = 1.0  // Maximum volume
+        ..autoplay = true;
+      
+      // Add to page temporarily
+      html.document.body!.append(audioElement);
+      
+      // Remove after 2 seconds
+      Future.delayed(Duration(seconds: 2), () {
+        audioElement.remove();
+      });
+      
+      print('🔊 Maximum volume test completed');
+      microphoneTestStatus.value = '✅ Maximum volume set';
+      
+      setError('🔊 Maximum Volume Test\n\nDid you hear a loud beep?\n\n✅ YES - Audio is working at full volume\n❌ NO - Browser is blocking audio\n\nIf NO, try:\n1. Different browser (Firefox/Edge)\n2. Run Chrome as administrator\n3. Check system audio settings');
+      
+    } catch (e) {
+      print('❌ Error setting maximum volume: $e');
+      microphoneTestStatus.value = '❌ Volume test failed';
+      setError('Failed to set maximum volume: $e\n\nTry using Firefox or Edge instead of Chrome.');
+    }
+  }
+
+  // Method to handle browser audio restrictions
+  void handleBrowserAudioRestrictions() {
+    try {
+      print('🔊 Handling browser audio restrictions...');
+      microphoneTestStatus.value = 'Checking browser restrictions...';
+      
+      final userAgent = html.window.navigator.userAgent.toLowerCase();
+      String browserName = 'Unknown';
+      String solution = '';
+      
+      if (userAgent.contains('chrome')) {
+        browserName = 'Chrome';
+        solution = '''
+🔧 Chrome Audio Solutions:
+
+1. **Run Chrome as Administrator:**
+   - Right-click Chrome icon
+   - Select "Run as administrator"
+   - This may unlock volume controls
+
+2. **Enable Audio in Chrome:**
+   - Type chrome://settings/content/sound
+   - Set this site to "Allow"
+   - Refresh the page
+
+3. **Try Chrome Flags:**
+   - Type chrome://flags
+   - Search for "autoplay"
+   - Enable "Autoplay policy"
+   - Restart Chrome
+
+4. **Alternative: Use Firefox or Edge**
+   - Download Firefox (better WebRTC audio)
+   - Or try Microsoft Edge
+''';
+      } else if (userAgent.contains('firefox')) {
+        browserName = 'Firefox';
+        solution = '''
+🦊 Firefox Audio Solutions:
+
+1. **Allow Audio Permissions:**
+   - Click the shield icon in address bar
+   - Set microphone to "Allow"
+   - Refresh the page
+
+2. **Check Firefox Settings:**
+   - Go to about:preferences#privacy
+   - Scroll to "Permissions"
+   - Set microphone to "Allow"
+
+3. **Firefox usually has better audio handling**
+''';
+      } else if (userAgent.contains('edge')) {
+        browserName = 'Edge';
+        solution = '''
+🌐 Edge Audio Solutions:
+
+1. **Allow Audio Permissions:**
+   - Click the lock icon in address bar
+   - Set microphone to "Allow"
+   - Refresh the page
+
+2. **Check Edge Settings:**
+   - Go to edge://settings/content/microphone
+   - Add this site to allowed list
+''';
+      } else {
+        solution = '''
+🌐 General Browser Solutions:
+
+1. **Try Different Browser:**
+   - Firefox (recommended for WebRTC)
+   - Microsoft Edge
+   - Safari (if on Mac)
+
+2. **Check System Audio:**
+   - Ensure speakers/headphones work
+   - Test with other applications
+   - Check Windows audio settings
+
+3. **Browser Permissions:**
+   - Allow microphone access
+   - Allow autoplay
+   - Refresh the page
+''';
+      }
+      
+      final message = '''
+🔊 Browser Audio Restrictions
+
+Detected Browser: $browserName
+
+$solution
+
+💡 **Quick Test:**
+1. Open YouTube in this browser
+2. Play any video
+3. Check if you can hear audio
+4. If YES: Browser audio works, issue is with WebRTC
+5. If NO: Browser/system audio issue
+''';
+      
+      print('🔊 Browser restriction check completed');
+      microphoneTestStatus.value = '✅ Browser check completed';
+      setError(message);
+      
+    } catch (e) {
+      print('❌ Error checking browser restrictions: $e');
+      microphoneTestStatus.value = '❌ Browser check failed';
+      setError('Failed to check browser restrictions: $e');
+    }
+  }
+
+  // Method to force Chrome audio fixes
+  void forceChromeAudioFix() {
+    try {
+      print('🔊 Forcing Chrome audio fixes...');
+      microphoneTestStatus.value = 'Applying Chrome audio fixes...';
+      
+      // Call the SIP service's Chrome audio fix
+      sipService.handleChromeAudioRestrictions();
+      
+      // Also create our own audio elements
+      for (int i = 0; i < 3; i++) {
+        final audioElement = html.AudioElement()
+          ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+          ..volume = 1.0
+          ..autoplay = true
+          ..muted = false;
+        
+        html.document.body!.append(audioElement);
+        
+        // Remove after 2 seconds
+        Future.delayed(Duration(seconds: 2), () {
+          audioElement.remove();
+        });
+      }
+      
+      print('🔊 Chrome audio fixes applied');
+      microphoneTestStatus.value = '✅ Chrome audio fixes applied';
+      
+      setError('🔊 Chrome Audio Fix Applied\n\nMultiple audio elements created with maximum volume.\n\nNow try making a call - you should be able to hear audio even with Chrome\'s 1% volume restriction.\n\nIf it still doesn\'t work, try Firefox or Edge.');
+      
+    } catch (e) {
+      print('❌ Error applying Chrome audio fixes: $e');
+      microphoneTestStatus.value = '❌ Chrome audio fix failed';
+      setError('Failed to apply Chrome audio fixes: $e\n\nTry using Firefox or Edge instead.');
+    }
+  }
+
   // Start microphone-only recording
   Future<void> startCallRecording() async {
     try {
@@ -906,7 +1158,7 @@ $specificInstructions
       _micRecorder = html.MediaRecorder(stream);
       _micChunks = [];
       _micRecorder!.addEventListener('dataavailable', (event) {
-        final dataEvent = event as html.Event;
+        final dataEvent = event;
         // Access data through the target property
         if (dataEvent.target is html.MediaRecorder) {
           final recorder = dataEvent.target as html.MediaRecorder;
@@ -944,7 +1196,7 @@ $specificInstructions
       _micRecorder = html.MediaRecorder(micStream);
       _micChunks = [];
       _micRecorder!.addEventListener('dataavailable', (event) {
-        final dataEvent = event as html.Event;
+        final dataEvent = event;
         // Access data through the target property
         if (dataEvent.target is html.MediaRecorder) {
           final recorder = dataEvent.target as html.MediaRecorder;

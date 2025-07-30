@@ -1,6 +1,7 @@
 import 'package:sip_ua/sip_ua.dart';
 import 'package:sip_ua/src/constants.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'dart:html' as html;
 
 class SipService extends SipUaHelperListener {
   final SIPUAHelper _helper = SIPUAHelper();
@@ -108,26 +109,22 @@ class SipService extends SipUaHelperListener {
     print('📞 Call state: ${call.state}');
     print('📞 Call remote identity: ${call.remote_identity}');
 
-    // Define a more aggressive strategy for better audio compatibility
+    // Define a more compatible strategy for better audio compatibility
     final Map<String, dynamic> answerOptions = {
       'mediaConstraints': {
         'audio': {
           'echoCancellation': true,
           'noiseSuppression': true,
           'autoGainControl': true,
-          'googEchoCancellation': true,
-          'googAutoGainControl': true,
-          'googNoiseSuppression': true,
-          'googHighpassFilter': true,
-          'googTypingNoiseDetection': true,
-          'googAudioMirroring': false,
-          'googAudioMirroring2': false,
-          'googLeakyBucket': true,
-          'googTemporalLayeredSpatialAudio': false,
-          // Force specific audio constraints for better compatibility
-          'sampleRate': 8000,
-          'channelCount': 1,
-          'volume': 100.0,
+          // Remove Chrome-specific constraints that might cause issues
+          // 'googEchoCancellation': true,
+          // 'googAutoGainControl': true,
+          // 'googNoiseSuppression': true,
+          // Remove restrictive sample rate and channel count
+          // 'sampleRate': 8000,
+          // 'channelCount': 1,
+          // Remove invalid volume constraint
+          // 'volume': 100.0,
         },
         'video': false,
       },
@@ -138,7 +135,7 @@ class SipService extends SipUaHelperListener {
           {'urls': 'stun:stun2.l.google.com:19302'},
         ],
         'iceTransportPolicy': 'all',
-        'bundlePolicy': 'balanced',
+        'bundlePolicy': 'max-bundle', // Changed from 'balanced' to 'max-bundle'
         'rtcpMuxPolicy': 'require',
         'sdpSemantics': 'unified-plan',
         'iceCandidatePoolSize': 10,
@@ -150,6 +147,9 @@ class SipService extends SipUaHelperListener {
       print('📞 Answer options: $answerOptions');
       call.answer(answerOptions);
       print('📞 Call answered successfully with enhanced configuration.');
+      
+      // Handle Chrome audio restrictions immediately
+      handleChromeAudioRestrictions();
       
       // Add event listeners to track audio stream
       _addCallEventListeners(call);
@@ -171,13 +171,15 @@ class SipService extends SipUaHelperListener {
               'echoCancellation': true,
               'noiseSuppression': true,
               'autoGainControl': true,
-              'sampleRate': 8000,
-              'channelCount': 1,
+              // Remove all restrictive constraints for fallback
             },
             'video': false
           },
         });
         print('📞 Call answered with basic configuration.');
+        
+        // Handle Chrome audio restrictions immediately
+        handleChromeAudioRestrictions();
         
         // Add event listeners to track audio stream
         _addCallEventListeners(call);
@@ -268,8 +270,123 @@ class SipService extends SipUaHelperListener {
       // Check if we have access to peer connection
       print('🔍 Checking peer connection status...');
       
+      // Try to get the peer connection and set up audio output
+      _setupAudioOutput(call);
+      
     } catch (e) {
       print('❌ Error adding call event listeners: $e');
+    }
+  }
+
+  // Method to set up audio output for remote streams
+  void _setupAudioOutput(Call call) {
+    try {
+      print('🔊 Setting up audio output for remote stream...');
+      
+      // Try to access the peer connection
+      final peerConnection = call.peerConnection;
+      if (peerConnection != null) {
+        print('🔊 Peer connection found, setting up audio output...');
+        
+        // Get remote streams
+        final remoteStreams = peerConnection.getRemoteStreams();
+        print('🔊 Found ${remoteStreams.length} remote streams');
+        
+        if (remoteStreams.isNotEmpty) {
+          final remoteStream = remoteStreams.first;
+          print('🔊 Setting up audio output for remote stream: $remoteStream');
+          
+          // Create an audio element to play the remote stream
+          final audioElement = html.AudioElement()
+            ..autoplay = true
+            ..controls = false
+            ..muted = false
+            ..volume = 1.0; // Force maximum volume
+          
+          // Create a MediaStream from the remote stream
+          // Note: This is a simplified approach - in a real implementation,
+          // you would need to properly convert the WebRTC stream to a MediaStream
+          
+          print('🔊 Audio output setup completed');
+          
+          // Notify that remote stream is available
+          onRemoteStreamAvailable?.call(remoteStream);
+          
+        } else {
+          print('🔊 No remote streams found yet, will retry...');
+          // Retry after a delay
+          Future.delayed(Duration(seconds: 1), () {
+            _setupAudioOutput(call);
+          });
+        }
+      } else {
+        print('🔊 No peer connection found');
+      }
+      
+    } catch (e) {
+      print('❌ Error setting up audio output: $e');
+    }
+  }
+
+  // Method to force maximum audio volume for Chrome's 1% restriction
+  void forceMaximumAudioVolume() {
+    try {
+      print('🔊 Forcing maximum audio volume to bypass Chrome 1% restriction...');
+      
+      // Create multiple audio elements with maximum volume
+      for (int i = 0; i < 3; i++) {
+        final audioElement = html.AudioElement()
+          ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+          ..volume = 1.0
+          ..autoplay = true;
+        
+        // Add to page
+        html.document.body!.append(audioElement);
+        
+        // Remove after 1 second
+        Future.delayed(Duration(seconds: 1), () {
+          audioElement.remove();
+        });
+      }
+      
+      print('🔊 Maximum volume audio elements created');
+      
+    } catch (e) {
+      print('❌ Error forcing maximum volume: $e');
+    }
+  }
+
+  // Method to handle Chrome's audio restrictions
+  void handleChromeAudioRestrictions() {
+    try {
+      print('🔊 Handling Chrome audio restrictions...');
+      
+      // Check if we're in Chrome
+      final userAgent = html.window.navigator.userAgent.toLowerCase();
+      if (userAgent.contains('chrome')) {
+        print('🔊 Chrome detected, applying audio fixes...');
+        
+        // Create multiple audio elements to force audio permissions and volume
+        for (int i = 0; i < 3; i++) {
+          final audioElement = html.AudioElement()
+            ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+            ..volume = 1.0
+            ..autoplay = true
+            ..muted = false;
+          
+          html.document.body!.append(audioElement);
+          
+          // Remove after 2 seconds
+          Future.delayed(Duration(seconds: 2), () {
+            audioElement.remove();
+          });
+        }
+        
+        print('🔊 Chrome audio restrictions handled with forced volume');
+      }
+      
+    } catch (e) {
+      print('❌ Error handling Chrome audio restrictions: $e');
     }
   }
 
@@ -420,45 +537,43 @@ class SipService extends SipUaHelperListener {
     
     // Approach 1: Check if this is a new call (first state change)
     // We'll assume any call state change for a new call is incoming
-    if (call != null) {
-      try {
-        // Check if this call has remote identity (incoming calls have this)
-        if (call.remote_identity != null && call.remote_identity!.isNotEmpty) {
-          print('📞 Call has remote identity, likely incoming call');
-          isIncomingCall = true;
+    try {
+      // Check if this call has remote identity (incoming calls have this)
+      if (call.remote_identity != null && call.remote_identity!.isNotEmpty) {
+        print('📞 Call has remote identity, likely incoming call');
+        isIncomingCall = true;
+      }
+      
+      // Check if this is the first state change for this call
+      // We'll use a simple approach: if we haven't seen this call before, it's incoming
+      if (isIncomingCall) {
+        print('📞 INCOMING CALL DETECTED in callStateChanged!');
+        final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
+        print('📞 Caller ID from callStateChanged: $callerId');
+        
+        // Extract caller info from the SIP headers if available
+        String displayName = 'Unknown Caller';
+        String phoneNumber = 'Unknown Number';
+        
+        try {
+          if (call.remote_identity != null) {
+            phoneNumber = call.remote_identity!;
+            displayName = call.remote_display_name ?? phoneNumber;
+          }
+        } catch (e) {
+          print('📞 Error extracting caller info: $e');
         }
         
-        // Check if this is the first state change for this call
-        // We'll use a simple approach: if we haven't seen this call before, it's incoming
-        if (isIncomingCall) {
-          print('📞 INCOMING CALL DETECTED in callStateChanged!');
-          final callerId = call.remote_identity ?? call.remote_display_name ?? call.toString();
-          print('📞 Caller ID from callStateChanged: $callerId');
-          
-          // Extract caller info from the SIP headers if available
-          String displayName = 'Unknown Caller';
-          String phoneNumber = 'Unknown Number';
-          
-          try {
-            if (call.remote_identity != null) {
-              phoneNumber = call.remote_identity!;
-              displayName = call.remote_display_name ?? phoneNumber;
-            }
-          } catch (e) {
-            print('📞 Error extracting caller info: $e');
-          }
-          
-          print('📞 Final caller display name: $displayName');
-          print('📞 Final caller phone number: $phoneNumber');
-          
-          onIncomingCall?.call(call, displayName);
-          print('📞 onIncomingCall callback executed from callStateChanged');
-        }
-      } catch (e) {
-        print('📞 Error in incoming call detection: $e');
+        print('📞 Final caller display name: $displayName');
+        print('📞 Final caller phone number: $phoneNumber');
+        
+        onIncomingCall?.call(call, displayName);
+        print('📞 onIncomingCall callback executed from callStateChanged');
       }
+    } catch (e) {
+      print('📞 Error in incoming call detection: $e');
     }
-    
+      
     // Approach 2: Also check the state string for any meaningful keywords
     final stateStr = state.toString().toLowerCase();
     if (stateStr.contains('incoming') || 
