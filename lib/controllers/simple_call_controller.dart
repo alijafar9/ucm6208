@@ -212,8 +212,8 @@ class SimpleCallController extends GetxController {
       sipService.register(
         username: '003',
         password: 'tr123',
-        domain: '172.16.26.2:5060', // Added explicit SIP port
-        wsUri: null, // No WebSocket - use UDP instead
+        domain: '172.16.26.2',
+        wsUri: 'ws://172.16.26.2:8088/ws', // Use WebSocket instead of TCP
         displayName: 'Flutter SIP Client',
       );
       
@@ -1128,6 +1128,65 @@ $solution
       print('❌ Error applying Chrome audio fixes: $e');
       microphoneTestStatus.value = '❌ Chrome audio fix failed';
       setError('Failed to apply Chrome audio fixes: $e\n\nTry using Firefox or Edge instead.');
+    }
+  }
+
+  // Method to apply aggressive Chrome audio fix
+  void applyAggressiveChromeAudioFix() {
+    try {
+      print('🔊 Applying aggressive Chrome audio fix...');
+      microphoneTestStatus.value = 'Applying aggressive Chrome audio fix...';
+      
+      // Create multiple audio elements with different approaches
+      for (int i = 0; i < 10; i++) {
+        final audioElement = html.AudioElement()
+          ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+          ..volume = 1.0
+          ..autoplay = true
+          ..muted = false
+          ..loop = false;
+        
+        html.document.body!.append(audioElement);
+        
+        // Force play each audio element
+        audioElement.play().then((_) {
+          print('🔊 Audio element $i started successfully');
+        }).catchError((e) {
+          print('🔊 Audio element $i failed: $e');
+        });
+        
+        // Remove after 5 seconds
+        Future.delayed(Duration(seconds: 5), () {
+          audioElement.remove();
+        });
+      }
+      
+      // Create a continuous audio element that stays active
+      final continuousAudio = html.AudioElement()
+        ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+        ..volume = 1.0
+        ..autoplay = true
+        ..muted = false
+        ..loop = true;
+      
+      html.document.body!.append(continuousAudio);
+      
+      // Force play the continuous audio
+      continuousAudio.play().then((_) {
+        print('🔊 Continuous audio started successfully');
+      }).catchError((e) {
+        print('🔊 Continuous audio failed: $e');
+      });
+      
+      print('🔊 Aggressive Chrome audio fix applied');
+      microphoneTestStatus.value = '✅ Aggressive Chrome audio fix applied';
+      
+      setError('🔊 Aggressive Chrome Audio Fix Applied\n\n10 audio elements created with maximum volume.\n\nContinuous audio element active.\n\nNow try making a call - this should bypass Chrome\'s 1% volume restriction.\n\nIf it still doesn\'t work, try Firefox or Edge.');
+      
+    } catch (e) {
+      print('❌ Error applying aggressive Chrome audio fix: $e');
+      microphoneTestStatus.value = '❌ Aggressive Chrome audio fix failed';
+      setError('Failed to apply aggressive Chrome audio fix: $e\n\nTry using Firefox or Edge instead.');
     }
   }
 

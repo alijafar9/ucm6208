@@ -27,50 +27,30 @@ class SipService extends SipUaHelperListener {
       print('📞 WebSocket URL: $wsUri');
       print('📞 Display Name: $displayName');
       
-      UaSettings settings = UaSettings();
+      // Create SIP URI
+      final sipUri = 'sip:$username@$domain';
       
-      // WebSocket settings (if provided)
+      // Configure settings based on transport type
+      final settings = UaSettings();
+      
       if (wsUri != null) {
+        // WebSocket transport
+        settings.uri = sipUri;
         settings.webSocketUrl = wsUri;
-        settings.webSocketSettings.extraHeaders = {};
-        settings.webSocketSettings.allowBadCertificate = true;
-        settings.transportType = TransportType.WS;
+        settings.authorizationUser = username;
+        settings.password = password;
+        settings.displayName = displayName ?? 'Flutter SIP Client';
+        settings.register = true;
+        settings.registrarServer = 'sip:$domain';
       } else {
-        // Use TCP transport
-        settings.transportType = TransportType.TCP;
+        // TCP/UDP transport (not supported in web)
+        settings.uri = sipUri;
+        settings.authorizationUser = username;
+        settings.password = password;
+        settings.displayName = displayName ?? 'Flutter SIP Client';
+        settings.register = true;
+        settings.registrarServer = 'sip:$domain';
       }
-      
-      // SIP URI and authentication
-      settings.uri = 'sip:$username@$domain';
-      settings.authorizationUser = username;
-      settings.password = password;
-      settings.displayName = displayName ?? username;
-      settings.userAgent = 'Dart SIP Client';
-      
-      // Registration settings
-      settings.register = true;
-      settings.register_expires = 120;
-      settings.registrarServer = 'sip:$domain';
-      
-      // DTMF mode
-      settings.dtmfMode = DtmfMode.RFC2833;
-      
-      // ICE settings
-      settings.iceServers = [
-        {'urls': 'stun:stun.l.google.com:19302'},
-      ];
-      settings.iceTransportPolicy = IceTransportPolicy.ALL;
-      
-      // Session timers
-      settings.sessionTimers = true;
-      settings.sessionTimersRefreshMethod = SipMethod.UPDATE;
-      
-      // Connection recovery
-      settings.connectionRecoveryMaxInterval = 30;
-      settings.connectionRecoveryMinInterval = 2;
-      
-      // ICE gathering timeout
-      settings.iceGatheringTimeout = 500;
       
       print('🚀 Starting SIP helper with settings...');
       print('🚀 Settings URI: ${settings.uri}');
@@ -80,13 +60,15 @@ class SipService extends SipUaHelperListener {
       _helper.start(settings);
       print('✅ SIP helper started successfully');
       
+      // Pre-initialize Chrome audio
+      preInitializeChromeAudio();
+      
       // Notify that registration process has started
       onError?.call('🔄 Registration process started...\n\nConnecting to SIP server...');
       
     } catch (e) {
-      print('❌ Error during SIP registration: $e');
-      onError?.call('❌ Registration failed to start: $e');
-      rethrow;
+      print('❌ Error starting SIP registration: $e');
+      onError?.call('❌ Failed to start SIP registration: $e');
     }
   }
 
@@ -364,29 +346,92 @@ class SipService extends SipUaHelperListener {
       // Check if we're in Chrome
       final userAgent = html.window.navigator.userAgent.toLowerCase();
       if (userAgent.contains('chrome')) {
-        print('🔊 Chrome detected, applying audio fixes...');
+        print('🔊 Chrome detected, applying aggressive audio fixes...');
         
         // Create multiple audio elements to force audio permissions and volume
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
           final audioElement = html.AudioElement()
             ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
             ..volume = 1.0
             ..autoplay = true
-            ..muted = false;
+            ..muted = false
+            ..loop = false;
           
           html.document.body!.append(audioElement);
           
-          // Remove after 2 seconds
-          Future.delayed(Duration(seconds: 2), () {
+          // Force play the audio
+          audioElement.play().then((_) {
+            print('🔊 Audio play started successfully');
+          }).catchError((e) {
+            print('🔊 Audio play failed: $e');
+          });
+          
+          // Remove after 3 seconds
+          Future.delayed(Duration(seconds: 3), () {
             audioElement.remove();
           });
         }
         
-        print('🔊 Chrome audio restrictions handled with forced volume');
+        // Also create a continuous audio element that stays active
+        final continuousAudio = html.AudioElement()
+          ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+          ..volume = 1.0
+          ..autoplay = true
+          ..muted = false
+          ..loop = true;
+        
+        html.document.body!.append(continuousAudio);
+        
+        // Force play the continuous audio
+        continuousAudio.play().then((_) {
+          print('🔊 Continuous audio play started successfully');
+        }).catchError((e) {
+          print('🔊 Continuous audio play failed: $e');
+        });
+        
+        print('🔊 Chrome audio restrictions handled with aggressive volume forcing');
       }
       
     } catch (e) {
       print('❌ Error handling Chrome audio restrictions: $e');
+    }
+  }
+
+  // Method to pre-initialize audio for Chrome
+  void preInitializeChromeAudio() {
+    try {
+      print('🔊 Pre-initializing Chrome audio...');
+      
+      final userAgent = html.window.navigator.userAgent.toLowerCase();
+      if (userAgent.contains('chrome')) {
+        print('🔊 Chrome detected, pre-initializing audio...');
+        
+        // Create a silent audio element to initialize audio context
+        final silentAudio = html.AudioElement()
+          ..src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'
+          ..volume = 0.1  // Very low volume for pre-initialization
+          ..autoplay = true
+          ..muted = false;
+        
+        html.document.body!.append(silentAudio);
+        
+        // Force play to initialize audio context
+        silentAudio.play().then((_) {
+          print('🔊 Silent audio initialization started successfully');
+        }).catchError((e) {
+          print('🔊 Silent audio initialization failed: $e');
+        });
+        
+        // Remove after 1 second
+        Future.delayed(Duration(seconds: 1), () {
+          silentAudio.remove();
+        });
+        
+        print('🔊 Chrome audio pre-initialized');
+      }
+      
+    } catch (e) {
+      print('❌ Error pre-initializing Chrome audio: $e');
     }
   }
 
